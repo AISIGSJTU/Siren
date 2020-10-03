@@ -148,16 +148,13 @@ def init():
 
     if args.mal:
         global mal_agent_index
-        mal_agent_index = args.k - 1
-
-    if args.mal:
-        global mal_agent_index
-        mal_agent_index = args.k - 1
         if args.attack_type != 'targeted_model_poisoning' and args.attack_type != 'stealthy_model_poisoning':
             mal_agent_index = []
             for i in range(int(args.k * (1 - args.malicious_proportion)), args.k):
                 mal_agent_index.append(i)
                 print("mal_agent_index:", mal_agent_index)
+        else:
+            mal_agent_index = args.k - 1
 
     global gpu_ids
     if args.gpu_ids is not None:

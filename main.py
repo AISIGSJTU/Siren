@@ -495,22 +495,22 @@ if __name__ == "__main__":
     with open('output/global_acc.txt', 'w') as f:
         f.write('Global Accuracy\n\n')
 
-    with open('output/prohibit.txt', 'w') as f:
-        f.write('Prohibit\n\n')
+    if args.gar == 'siren':
+        with open('output/prohibit.txt', 'w') as f:
+            f.write('Prohibit\n\n')
+        with open('output/used_gradient.txt', 'w') as f:
+            f.write('Used Gradient\n\n')
 
-    with open('output/used_gradient.txt', 'w') as f:
-        f.write('Used Gradient\n\n')
-
-    if args.attack_type == 'targeted_model_poisoning' or args.attack_type == 'stealthy_model_poisoning':
-        for i in range(args.k):
-            if i != gv.mal_agent_index:
-                with open('output/alarm_%s.txt' % i, 'w') as f:
-                    f.write('Client Alarm %s\n\n' % i)
-    else:
-        for i in range(args.k):
-            if i not in gv.mal_agent_index:
-                with open('output/alarm_%s.txt' % i, 'w') as f:
-                    f.write('Client Alarm %s\n\n' % i)
+        if args.attack_type == 'targeted_model_poisoning' or args.attack_type == 'stealthy_model_poisoning':
+            for i in range(args.k):
+                if i != gv.mal_agent_index:
+                    with open('output/alarm_%s.txt' % i, 'w') as f:
+                        f.write('Client Alarm %s\n\n' % i)
+        else:
+            for i in range(args.k):
+                if i not in gv.mal_agent_index:
+                    with open('output/alarm_%s.txt' % i, 'w') as f:
+                        f.write('Client Alarm %s\n\n' % i)
 
     for i in range(args.k):
         with open('output/client_%s.txt' % i, 'w') as f:
