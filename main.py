@@ -153,18 +153,27 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
                 gpu_index = int(l / gv.max_agents_per_gpu)
                 gpu_id = gv.gpu_ids[gpu_index]
                 i = curr_agents[k]
-                if args.mal is False or i != mal_agent_index:
+                if args.mal is False:
                     p = Process(target=agent, args=(i, X_train_shards[i],
-                                                Y_train_shards[i], t, gpu_id, return_dict, X_test, Y_test,lr))
-                elif args.mal is True and i == mal_agent_index:
-                    if args.attack_type == 'targeted_model_poisoning' or args.attack_type == 'stealthy_model_poisoning':
+                                                    Y_train_shards[i], t, gpu_id, return_dict, X_test, Y_test, lr))
+                elif args.attack_type == 'targeted_model_poisoning' or args.attack_type == 'stealthy_model_poisoning':
+                    if i != mal_agent_index:
+                        p = Process(target=agent, args=(i, X_train_shards[i],
+                                                        Y_train_shards[i], t, gpu_id, return_dict, X_test, Y_test,lr))
+                    else:
                         p = Process(target=mal_agent_mp, args=(X_train_shards[mal_agent_index],
-                                                            Y_train_shards[mal_agent_index], mal_data_X, mal_data_Y, t,
-                                                            gpu_id, return_dict, mal_visible, X_test, Y_test))
+                                                                   Y_train_shards[mal_agent_index], mal_data_X,
+                                                                   mal_data_Y, t,
+                                                                   gpu_id, return_dict, mal_visible, X_test, Y_test))
+                else:
+                    if i not in mal_agent_index:
+                        p = Process(target=agent, args=(i, X_train_shards[i],
+                                                        Y_train_shards[i], t, gpu_id, return_dict, X_test, Y_test, lr))
                     else:
                         p = Process(target=mal_agent_other, args=(i, X_train_shards[i],
-                                                            Y_train_shards[i], t, gpu_id, return_dict, X_test, Y_test,
-                                                            lr))
+                                                                  Y_train_shards[i], t, gpu_id, return_dict, X_test,
+                                                                  Y_test,
+                                                                  lr))
                     mal_active = 1
 
                 p.start()
