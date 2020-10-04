@@ -2,7 +2,7 @@
 
 This code accompanies the paper 'Siren: A Proactive Attack-agnostic Defense System for Federated Learning'. Please download Fashion-MNIST dataset to /home/data/ on the user's machine if you want to use it.
 
-Recommended Dependencies: Python-3.5, Tensorflow-1.8, keras, numpy, scipy, scikit-learn. It is possible for our codes to run with newer versions of Tensorflow and Python, but we didn't test it thoroughly.
+Recommended Dependencies: Please check the requirement.txt file in /requirement/. We have tested our system using this setting.
 
 To run the code, please use:
 
