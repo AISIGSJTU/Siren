@@ -2,7 +2,7 @@
 
 This code accompanies the paper 'Siren: A Proactive Attack-agnostic Defense System for Federated Learning'. Please download Fashion-MNIST dataset to /home/data/ on the user's machine if you want to use it.
 
-Recommended Dependencies: Please check the requirement.txt file in /requirement/. We have tested our system using this setting.
+Recommended Dependencies: Please check the requirements.txt file in /requirement/. We have tested our system using this setting.
 
 To run the code, please use:
 
