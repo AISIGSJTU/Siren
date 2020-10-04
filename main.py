@@ -247,16 +247,28 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
         if 'avg' in args.gar:
             if args.mal:
                 count = 0
-                for k in range(num_agents_per_time):
-                    if curr_agents[k] != mal_agent_index:
-                        if count == 0:
-                            ben_delta = alpha_i * return_dict[str(curr_agents[k])]
-                            np.save(gv.dir_name + 'ben_delta_sample%s.npy' % t, return_dict[str(curr_agents[k])])
-                            if t > 0 and os.path.exists(gv.dir_name + 'ben_delta_sample%s.npy' % (t-1)):
-                                os.remove(gv.dir_name + 'ben_delta_sample%s.npy' % (t-1))
-                            count += 1
-                        else:
-                            ben_delta += alpha_i * return_dict[str(curr_agents[k])]
+                if args.attack_type == 'targeted_model_poisoning' or args.attack_type == 'stealthy_model_poisoning':
+                  for k in range(num_agents_per_time):
+                      if curr_agents[k] != mal_agent_index:
+                          if count == 0:
+                              ben_delta = alpha_i * return_dict[str(curr_agents[k])]
+                              np.save(gv.dir_name + 'ben_delta_sample%s.npy' % t, return_dict[str(curr_agents[k])])
+                              if t > 0 and os.path.exists(gv.dir_name + 'ben_delta_sample%s.npy' % (t-1)):
+                                  os.remove(gv.dir_name + 'ben_delta_sample%s.npy' % (t-1))
+                              count += 1
+                          else:
+                              ben_delta += alpha_i * return_dict[str(curr_agents[k])]
+                else:
+                  for k in range(num_agents_per_time):
+                      if curr_agents[k] not in mal_agent_index:
+                          if count == 0:
+                              ben_delta = alpha_i * return_dict[str(curr_agents[k])]
+                              np.save(gv.dir_name + 'ben_delta_sample%s.npy' % t, return_dict[str(curr_agents[k])])
+                              if t > 0 and os.path.exists(gv.dir_name + 'ben_delta_sample%s.npy' % (t-1)):
+                                  os.remove(gv.dir_name + 'ben_delta_sample%s.npy' % (t-1))
+                              count += 1
+                          else:
+                              ben_delta += alpha_i * return_dict[str(curr_agents[k])]
                 np.save(gv.dir_name + 'ben_delta_t%s.npy' % t, ben_delta)
                 if t>0 and os.path.exists(gv.dir_name + 'ben_delta_t%s.npy' % (t-1)):
                     os.remove(gv.dir_name + 'ben_delta_t%s.npy' % (t-1))
@@ -273,16 +285,28 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
         if 'siren' in args.gar:
             if args.mal:
                 count = 0
-                for k in range(num_agents_per_time):
-                    if curr_agents[k] not in mal_agent_index and use_gradient[k] != 0:
-                        if count == 0:
-                            ben_delta = alpha_i * return_dict[str(curr_agents[k])]
-                            np.save(gv.dir_name + 'ben_delta_sample%s.npy' % t, return_dict[str(curr_agents[k])])
-                            if t > 0 and os.path.exists(gv.dir_name + 'ben_delta_sample%s.npy' % (t-1)):
-                                os.remove(gv.dir_name + 'ben_delta_sample%s.npy' % (t-1))
-                            count += 1
-                        else:
-                            ben_delta += alpha_i * return_dict[str(curr_agents[k])]
+                if args.attack_type == 'targeted_model_poisoning' or args.attack_type == 'stealthy_model_poisoning':
+                  for k in range(num_agents_per_time):
+                      if curr_agents[k] != mal_agent_index and use_gradient[k] != 0:
+                          if count == 0:
+                              ben_delta = alpha_i * return_dict[str(curr_agents[k])]
+                              np.save(gv.dir_name + 'ben_delta_sample%s.npy' % t, return_dict[str(curr_agents[k])])
+                              if t > 0 and os.path.exists(gv.dir_name + 'ben_delta_sample%s.npy' % (t-1)):
+                                  os.remove(gv.dir_name + 'ben_delta_sample%s.npy' % (t-1))
+                              count += 1
+                          else:
+                              ben_delta += alpha_i * return_dict[str(curr_agents[k])]
+                else:
+                  for k in range(num_agents_per_time):
+                      if curr_agents[k] not in mal_agent_index and use_gradient[k] != 0:
+                          if count == 0:
+                              ben_delta = alpha_i * return_dict[str(curr_agents[k])]
+                              np.save(gv.dir_name + 'ben_delta_sample%s.npy' % t, return_dict[str(curr_agents[k])])
+                              if t > 0 and os.path.exists(gv.dir_name + 'ben_delta_sample%s.npy' % (t-1)):
+                                  os.remove(gv.dir_name + 'ben_delta_sample%s.npy' % (t-1))
+                              count += 1
+                          else:
+                              ben_delta += alpha_i * return_dict[str(curr_agents[k])]
 
                 np.save(gv.dir_name + 'ben_delta_t%s.npy' % t, ben_delta)
                 if t>0 and os.path.exists(gv.dir_name + 'ben_delta_t%s.npy' % (t-1)):
