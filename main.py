@@ -235,8 +235,11 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
             if num == args.k:
                 flag = 0
             if flag and exist_mal:
-                global_weights = np.load(gv.dir_name + 'global_weights_t%s.npy' % (t - 1), allow_pickle=True)
-                exist_mal = 0
+                if t-1>=0:
+                  global_weights = np.load(gv.dir_name + 'global_weights_t%s.npy' % (t-1), allow_pickle=True)
+                  exist_mal = 0
+                else:
+                  global_weights = np.load(gv.dir_name + 'global_weights_t%s.npy' % t, allow_pickle=True)
             else:
                 global_weights = np.load(gv.dir_name + 'global_weights_t%s.npy' % t, allow_pickle=True)
         else:
