@@ -150,7 +150,7 @@ def init():
         global mal_agent_index
         if args.attack_type != 'targeted_model_poisoning' and args.attack_type != 'stealthy_model_poisoning':
             mal_agent_index = []
-            for i in range(int(args.k * (1 - args.malicious_proportion)), args.k):
+            for i in range(round(args.k*(1-args.malicious_proportion)), args.k):
                 mal_agent_index.append(i)
                 print("mal_agent_index:", mal_agent_index)
         else:
@@ -180,7 +180,7 @@ def init():
             max_acc = 99.0
         elif args.dataset == 'fMNIST':
             max_acc = 99.0
-        max_agents_per_gpu = 5
+        max_agents_per_gpu = 10
         mem_frac = 0.05
     elif args.dataset == 'census':
         global DATA_DIM
@@ -188,7 +188,7 @@ def init():
         BATCH_SIZE = 50
         NUM_CLASSES = 2
         max_acc = 85.0
-        max_agents_per_gpu = 5
+        max_agents_per_gpu = 10
         mem_frac = 0.05
     elif args.dataset == 'CIFAR-10':
         IMAGE_ROWS = 32
@@ -197,7 +197,7 @@ def init():
         NUM_CLASSES = 10
         BATCH_SIZE = 64
         max_acc = 99.0
-        max_agents_per_gpu = 5
+        max_agents_per_gpu = 10
         mem_frac = 0.05
 
     if max_agents_per_gpu < 1:
