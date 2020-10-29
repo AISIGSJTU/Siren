@@ -545,7 +545,7 @@ def mal_agent_mp(X_shard, Y_shard, mal_data_X, mal_data_Y, t, gpu_id, return_dic
         eval_success, eval_loss = eval_minimal(X_test, Y_test, penul_weights)
         print('Penul weights ---- Malicious Agent: success {}, loss {}'.format(
             eval_success, eval_loss))
-
+    return_dict["alarm" + str(mal_index)] = 1
     return
 
 def mal_agent_other(i, X_shard, Y_shard, t, gpu_id, return_dict, X_test, Y_test, lr=None):
@@ -705,4 +705,5 @@ def mal_agent_other(i, X_shard, Y_shard, t, gpu_id, return_dict, X_test, Y_test,
     write_dict['eval_success'] = eval_success
     write_dict['eval_loss'] = eval_loss
     file_write(write_dict, purpose='mal_eval_loss')
+    return_dict["alarm" + str(i)] = 1
     return

@@ -214,6 +214,8 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
             for w in range(args.k):
                 if use_gradient[w] == 1:
                     alpha_i += 1
+            if alpha_i == 0:
+              alpha_i=1
             alpha_i = 1.0 / alpha_i
             print("prohibit: ", prohibit)
             with open('output/prohibit.txt', 'a') as f:
