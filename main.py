@@ -288,7 +288,7 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
                     global_weights += alpha_i * return_dict[str(curr_agents[k])]
 
         if 'siren' in args.gar:
-            bel_delta = 0
+            ben_delta = 0
             if args.mal:
                 count = 0
                 if args.attack_type == 'targeted_model_poisoning' or args.attack_type == 'stealthy_model_poisoning':
