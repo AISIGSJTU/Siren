@@ -20,7 +20,40 @@ import time
 import random
 import math
 
+# def flatten_weight(weights):
+#     # flatten = []
+#     # for i in range(len(weights)):
+#     #     flatten.append(weights[i].flatten())
+#     # flatten = np.array(flatten)
+#     # return flatten.flatten()
+#     weights = weights[np.newaxis, ...]
+#     return weights.flatten()
+
+def weight_product(a, b):
+    sum = 0
+
+def weight_shape(weight):
+    print(weight.shape)
+    print(weight[1].shape)
+    print(weight[2].shape)
+    for i in range(len(weight[2])):
+        print(weight[2][i].shape)
+    print(weight[3].shape)
+    print(weight[4].shape)
+    for i in range(len(weight[4])):
+        print(weight[4][i].shape)
+    print(weight[5].shape)
+    print(weight[6].shape)
+    for i in range(len(weight[6])):
+        print(weight[6][i].shape)
+    print(weight[7].shape)
+    print(weight[8].shape)
+    for i in range(len(weight[8])):
+        print(weight[8][i].shape)
+
 def server_detect(X_test, Y_test, return_dict, prohibit, t):
+    global_weights = np.load(gv.dir_name + 'global_weights_t%s.npy' % t, allow_pickle=True)
+    # print('global flatten:', flatten_weight(global_weights).shape, flatten_weight(global_weights))
     alarm_num = 0
     use_gradient = {}
     for w in range(args.k):
@@ -33,20 +66,42 @@ def server_detect(X_test, Y_test, return_dict, prohibit, t):
     if alarm_num > 1:
         print()
         acc_list = {}
+        weight_list = {}
         max_acc = 0
+        max_weight = 0
         for w in range(args.k):
             if return_dict["alarm" + str(w)] == 1:
                 tmp_local_weights = np.load(gv.dir_name + 'ben_weights_%s_t%s.npy' % (w, t), allow_pickle=True)
+                # print('local flatten:', tmp_local_weights.flatten().shape, tmp_local_weights.flatten())
+                # print('local weight shape', tmp_local_weights.shape)
                 tmp_acc, tmp_loss = eval_minimal(X_test, Y_test, tmp_local_weights)
                 acc_list[w] = tmp_acc
+                weight_list[w] = tmp_local_weights - global_weights
+                # print('local weight type:', type(tmp_local_weights))
                 if tmp_acc > max_acc:
                     max_acc = tmp_acc
+                    max_weight = tmp_local_weights - global_weights
         print("max_acc = %s" % max_acc)
         unnormal_num = 0
         unnormal_list = []
         for w in range(args.k):
             if return_dict["alarm" + str(w)] == 1:
-                if acc_list[w] < max_acc - 3.0:
+                # print('global weight shape:-------------------------------------------')
+                # print(max_weight.shape)
+                # for l in range(len(max_weight)):
+                #     print(max_weight[l].shape)
+                # print('---------------------------------------------------------------')
+                #
+                # print('local weight shape:-------------------------------------------')
+                # print(weight_list[w].shape)
+                # for l in range(len(weight_list[w])):
+                #     print(weight_list[w][l].shape)
+                # print('---------------------------------------------------------------')
+                print('weight shape:-----------------------------------------')
+                weight_shape(global_weights)
+                print('------------------------------------------------------')
+                print('weight score:', np.sum(max_weight * weight_list[w]))
+                if acc_list[w] < max_acc - 3.0 or np.sum(max_weight * weight_list[w]) <= 0:
                     unnormal_num += 1
                     unnormal_list.append(w)
         if unnormal_num == 0:
@@ -54,14 +109,18 @@ def server_detect(X_test, Y_test, return_dict, prohibit, t):
                 if return_dict["alarm" + str(w)] == 1:
                     use_gradient[w] = 0'''
             acc_list2 = {}
+            weight_list2 = {}
             max_acc2 = 0
+            max_weight2 = 0
             for w in range(args.k):
                 if return_dict["alarm" + str(w)] == 0:
                     tmp_local_weights = np.load(gv.dir_name + 'ben_weights_%s_t%s.npy' % (w, t), allow_pickle=True)
                     tmp_acc, tmp_loss = eval_minimal(X_test, Y_test, tmp_local_weights)
                     acc_list2[w] = tmp_acc
+                    weight_list2[w] = tmp_local_weights - global_weights
                     if tmp_acc > max_acc2:
                         max_acc2 = tmp_acc
+                        max_weight2 = tmp_local_weights - global_weights
             print("new_max_acc = %s" % max_acc2)
             if max_acc2 < max_acc - 3.0:
                 for w in range(args.k):
@@ -73,7 +132,7 @@ def server_detect(X_test, Y_test, return_dict, prohibit, t):
                         use_gradient[w] = 0
                 for w in range(args.k):
                     if return_dict["alarm" + str(w)] == 0:
-                        if acc_list2[w] < max_acc2 - 3.0:
+                        if acc_list2[w] < max_acc2 - 3.0 or np.sum(max_weight2 * weight_list2[w]) <= 0:
                             use_gradient[w] = 0
 
         else:
@@ -86,16 +145,21 @@ def server_detect(X_test, Y_test, return_dict, prohibit, t):
     elif alarm_num == 1:
         print("Thoroughly checking")
         acc_list = {}
+        weight_list = {}
         max_acc = 0
+        max_weight = 0
         for w in range(args.k):
             tmp_local_weights = np.load(gv.dir_name + 'ben_weights_%s_t%s.npy' % (w, t), allow_pickle=True)
             tmp_acc, tmp_loss = eval_minimal(X_test, Y_test, tmp_local_weights)
             acc_list[w] = tmp_acc
+            weight_list[w] = tmp_local_weights - global_weights
             if tmp_acc > max_acc:
                 max_acc = tmp_acc
+                max_weight = tmp_local_weights - global_weights
         print("max_acc = %s" % max_acc)
         for w in range(args.k):
-            if acc_list[w] < max_acc - 3.0:
+            print('weight score of thoroughly checking:', np.sum(max_weight * weight_list[w]))
+            if acc_list[w] < max_acc - 3.0 or np.sum(max_weight * weight_list[w]) <= 0:
                 use_gradient[w] = 0
     return_dict["use_gradient"] = use_gradient
     #return use_gradient
