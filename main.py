@@ -20,36 +20,15 @@ import time
 import random
 import math
 
-# def flatten_weight(weights):
-#     # flatten = []
-#     # for i in range(len(weights)):
-#     #     flatten.append(weights[i].flatten())
-#     # flatten = np.array(flatten)
-#     # return flatten.flatten()
-#     weights = weights[np.newaxis, ...]
-#     return weights.flatten()
+def flatten_weight(weight):
+    flatten_weights = []
+    for i in range(len(weight)):
+        if i != 1 and i != 3 and i != 5:
+            print('each layer flatten shape:', weight[i].flatten().shape)
+            flatten_weights.extend(weight[i].flatten().tolist())
+    print("flatten weight shape:", (np.array(flatten_weights).shape))
+    return np.array(flatten_weights)
 
-def weight_product(a, b):
-    sum = 0
-
-def weight_shape(weight):
-    print(weight.shape)
-    print(weight[1].shape)
-    print(weight[2].shape)
-    for i in range(len(weight[2])):
-        print(weight[2][i].shape)
-    print(weight[3].shape)
-    print(weight[4].shape)
-    for i in range(len(weight[4])):
-        print(weight[4][i].shape)
-    print(weight[5].shape)
-    print(weight[6].shape)
-    for i in range(len(weight[6])):
-        print(weight[6][i].shape)
-    print(weight[7].shape)
-    print(weight[8].shape)
-    for i in range(len(weight[8])):
-        print(weight[8][i].shape)
 
 def server_detect(X_test, Y_test, return_dict, prohibit, t):
     global_weights = np.load(gv.dir_name + 'global_weights_t%s.npy' % t, allow_pickle=True)
@@ -86,22 +65,8 @@ def server_detect(X_test, Y_test, return_dict, prohibit, t):
         unnormal_list = []
         for w in range(args.k):
             if return_dict["alarm" + str(w)] == 1:
-                # print('global weight shape:-------------------------------------------')
-                # print(max_weight.shape)
-                # for l in range(len(max_weight)):
-                #     print(max_weight[l].shape)
-                # print('---------------------------------------------------------------')
-                #
-                # print('local weight shape:-------------------------------------------')
-                # print(weight_list[w].shape)
-                # for l in range(len(weight_list[w])):
-                #     print(weight_list[w][l].shape)
-                # print('---------------------------------------------------------------')
-                print('weight shape:-----------------------------------------')
-                weight_shape(global_weights)
-                print('------------------------------------------------------')
-                print('weight score:', np.sum(max_weight * weight_list[w]))
-                if acc_list[w] < max_acc - 3.0 or np.sum(max_weight * weight_list[w]) <= 0:
+                print('weight score:', np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])))
+                if acc_list[w] < max_acc - 3.0 or np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])) <= 0:
                     unnormal_num += 1
                     unnormal_list.append(w)
         if unnormal_num == 0:
@@ -132,7 +97,7 @@ def server_detect(X_test, Y_test, return_dict, prohibit, t):
                         use_gradient[w] = 0
                 for w in range(args.k):
                     if return_dict["alarm" + str(w)] == 0:
-                        if acc_list2[w] < max_acc2 - 3.0 or np.sum(max_weight2 * weight_list2[w]) <= 0:
+                        if acc_list2[w] < max_acc2 - 3.0 or np.sum(flatten_weight(max_weight2) * flatten_weight(weight_list2[w])) <= 0:
                             use_gradient[w] = 0
 
         else:
@@ -158,8 +123,8 @@ def server_detect(X_test, Y_test, return_dict, prohibit, t):
                 max_weight = tmp_local_weights - global_weights
         print("max_acc = %s" % max_acc)
         for w in range(args.k):
-            print('weight score of thoroughly checking:', np.sum(max_weight * weight_list[w]))
-            if acc_list[w] < max_acc - 3.0 or np.sum(max_weight * weight_list[w]) <= 0:
+            print('weight score of thoroughly checking:', np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])))
+            if acc_list[w] < max_acc - 3.0 or np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])) <= 0:
                 use_gradient[w] = 0
     return_dict["use_gradient"] = use_gradient
     #return use_gradient

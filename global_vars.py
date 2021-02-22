@@ -1,4 +1,4 @@
-#########################
+ #########################
 # Purpose: Sets up global variables to be used throughout
 ########################
 
