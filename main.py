@@ -66,7 +66,7 @@ def server_detect(X_test, Y_test, return_dict, prohibit, t):
         for w in range(args.k):
             if return_dict["alarm" + str(w)] == 1:
                 print('weight score:', np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])))
-                if acc_list[w] < max_acc - 3.0 or np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])) <= 0:
+                if acc_list[w] < max_acc - 5.0 or np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])) <= 0:
                     unnormal_num += 1
                     unnormal_list.append(w)
         if unnormal_num == 0:
@@ -97,7 +97,7 @@ def server_detect(X_test, Y_test, return_dict, prohibit, t):
                         use_gradient[w] = 0
                 for w in range(args.k):
                     if return_dict["alarm" + str(w)] == 0:
-                        if acc_list2[w] < max_acc2 - 3.0 or np.sum(flatten_weight(max_weight2) * flatten_weight(weight_list2[w])) <= 0:
+                        if acc_list2[w] < max_acc2 - 5.0 or np.sum(flatten_weight(max_weight2) * flatten_weight(weight_list2[w])) <= 0:
                             use_gradient[w] = 0
 
         else:
