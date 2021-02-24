@@ -7,16 +7,6 @@
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="FindInProjectRecents">
-    <findStrings>
-      <find>score</find>
-      <find>server_detect</find>
-      <find>type</find>
-      <find>return_dict</find>
-      <find>numpy</find>
-      <find>aggrega</find>
-    </findStrings>
-  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
@@ -42,7 +32,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1613641796120</updated>
-      <workItem from="1613829563374" duration="12039000" />
+      <workItem from="1613829563374" duration="18087000" />
     </task>
     <servers />
   </component>

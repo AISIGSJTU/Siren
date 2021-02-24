@@ -44,7 +44,10 @@ def file_write(write_dict, purpose='global_eval_loss'):
 def data_setup():
 	args = gv.args
 	if 'MNIST' in args.dataset:
-		X_train, Y_train, X_test, Y_test = data_mnist()
+		if args.gar == 'siren':
+			X_train, Y_train, X_test, Y_test, Server_X, Server_Y = data_mnist()
+		else:
+			X_train, Y_train, X_test, Y_test = data_mnist()
 		Y_test_uncat = np.argmax(Y_test, axis=1)
 		print('Loaded f/MNIST data')
 	elif args.dataset == 'CIFAR-10':
@@ -70,8 +73,10 @@ def data_setup():
 		print(Y_test)
 		print(Y_test_uncat)
 		print('Loaded Census data')
-
-	return X_train, Y_train, X_test, Y_test, Y_test_uncat
+	if args.gar == 'siren':
+		return X_train, Y_train, X_test, Y_test, Y_test_uncat, Server_X, Server_Y
+	else:
+		return X_train, Y_train, X_test, Y_test, Y_test_uncat
 
 
 def mal_data_create(X_test, Y_test, Y_test_uncat):

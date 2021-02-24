@@ -66,7 +66,7 @@ def server_detect(X_test, Y_test, return_dict, prohibit, t):
         for w in range(args.k):
             if return_dict["alarm" + str(w)] == 1:
                 print('weight score:', np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])))
-                if acc_list[w] < max_acc - 3.0 or np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])) <= 0:
+                if acc_list[w] < max_acc - 5.0 or np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])) <= 0:
                     unnormal_num += 1
                     unnormal_list.append(w)
         if unnormal_num == 0:
@@ -97,7 +97,7 @@ def server_detect(X_test, Y_test, return_dict, prohibit, t):
                         use_gradient[w] = 0
                 for w in range(args.k):
                     if return_dict["alarm" + str(w)] == 0:
-                        if acc_list2[w] < max_acc2 - 3.0 or np.sum(flatten_weight(max_weight2) * flatten_weight(weight_list2[w])) <= 0:
+                        if acc_list2[w] < max_acc2 - 5.0 or np.sum(flatten_weight(max_weight2) * flatten_weight(weight_list2[w])) <= 0:
                             use_gradient[w] = 0
 
         else:
@@ -124,13 +124,13 @@ def server_detect(X_test, Y_test, return_dict, prohibit, t):
         print("max_acc = %s" % max_acc)
         for w in range(args.k):
             print('weight score of thoroughly checking:', np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])))
-            if acc_list[w] < max_acc - 3.0 or np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])) <= 0:
+            if acc_list[w] < max_acc - 5.0 or np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])) <= 0:
                 use_gradient[w] = 0
     return_dict["use_gradient"] = use_gradient
     #return use_gradient
 
 def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
-             mal_data_X=None, mal_data_Y=None):
+             mal_data_X=None, mal_data_Y=None, Server_X = None, Server_Y = None):
     # Start the training process
     num_agents_per_time = int(args.C * args.k)
     simul_agents = gv.num_gpus * gv.max_agents_per_gpu
@@ -230,7 +230,7 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
         # ----------------------------------------------------------------
 
         if args.gar == 'siren':
-            p_server = Process(target=server_detect, args=(X_test, Y_test, return_dict, prohibit, t))
+            p_server = Process(target=server_detect, args=(Server_X, Server_Y, return_dict, prohibit, t))
             p_server.start()
             p_server.join()
             use_gradient = return_dict["use_gradient"]
@@ -459,8 +459,12 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
 
 
 def main():
-
-    X_train, Y_train, X_test, Y_test, Y_test_uncat = data_setup()
+    Server_X = None
+    Server_Y = None
+    if args.gar == 'siren':
+        X_train, Y_train, X_test, Y_test, Y_test_uncat, Server_X, Server_Y = data_setup()
+    else:
+        X_train, Y_train, X_test, Y_test, Y_test_uncat = data_setup()
 
     # Create data shards
     if args.non_iidness == 0:
@@ -520,7 +524,7 @@ def main():
         if args.mal:
             return_dict['mal_suc_count'] = 0
             t_final = train_fn(X_train_shards, Y_train_shards, X_test, Y_test_uncat,
-                               return_dict, mal_data_X, mal_data_Y)
+                               return_dict, mal_data_X, mal_data_Y, Server_X, Server_Y)
             print('Malicious agent succeeded in %s of %s iterations' %
                   (return_dict['mal_suc_count'], t_final * args.mal_num))
         else:

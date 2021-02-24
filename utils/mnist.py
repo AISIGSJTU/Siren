@@ -43,6 +43,14 @@ def data_mnist(one_hot=True):
     X_test = X_test.astype('float32')
     X_train /= 255
     X_test /= 255
+    if gv.args.gar == 'siren':
+        target_indices = np.random.choice(len(X_test), 100)
+        Server_X = X_train[target_indices]
+        Server_Y = y_train[target_indices]
+        print("server dataset initialized..")
+        print('server dataset shape:', Server_X.shape)
+        X_train = np.delete(X_train, target_indices, axis=0)
+        y_train = np.delete(y_train, target_indices, axis=0)
     print('X_train shape:', X_train.shape)
     print(X_train.shape[0], 'train samples')
     print(X_test.shape[0], 'test samples')
@@ -51,8 +59,10 @@ def data_mnist(one_hot=True):
         # convert class vectors to binary class matrices
         y_train = np_utils.to_categorical(y_train, gv.NUM_CLASSES).astype(np.float32)
         y_test = np_utils.to_categorical(y_test, gv.NUM_CLASSES).astype(np.float32)
-
-    return X_train, y_train, X_test, y_test
+    if gv.args.gar == 'siren':
+        return X_train, y_train, X_test, y_test, Server_X, Server_Y
+    else:
+        return X_train, y_train, X_test, y_test
 
 def model_cifar():
     model = Sequential()
