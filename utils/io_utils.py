@@ -66,6 +66,17 @@ def data_setup():
 		X_test -= mean_image
 		X_train /= 128.
 		X_test /= 128.
+		if gv.args.gar == 'siren':
+			target_indices = np.random.choice(len(X_test), 100)
+			Server_X = X_train[target_indices]
+			print("Server dataset shape:", Server_X.shape)
+			Server_Y = Y_train[target_indices]
+			print("server dataset initialized..")
+			print('server dataset shape:', Server_X.shape)
+			X_train = np.delete(X_train, target_indices, axis=0)
+			Y_train = np.delete(Y_train, target_indices, axis=0)
+		print('X_train shape:', X_train.shape)
+		print(X_train.shape[0], 'train samples')
 		print('Loaded CIFAR-10 data')
 	elif args.dataset == 'census':
 		X_train, Y_train, X_test, Y_test = data_census()

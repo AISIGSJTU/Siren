@@ -21,13 +21,22 @@ import random
 import math
 
 def flatten_weight(weight):
-    flatten_weights = []
-    for i in range(len(weight)):
-        if i != 1 and i != 3 and i != 5:
-            print('each layer flatten shape:', weight[i].flatten().shape)
-            flatten_weights.extend(weight[i].flatten().tolist())
-    print("flatten weight shape:", (np.array(flatten_weights).shape))
-    return np.array(flatten_weights)
+    if args.dataset == "fMNIST":
+        flatten_weights = []
+        for i in range(len(weight)):
+            if i != 1 and i != 3 and i != 5:
+                print('each layer flatten shape:', weight[i].flatten().shape)
+                flatten_weights.extend(weight[i].flatten().tolist())
+        print("flatten weight shape:", (np.array(flatten_weights).shape))
+        return np.array(flatten_weights)
+    if args.dataset == "CIFAR-10":
+        flatten_weights = []
+        for i in range(len(weight)):
+            if i != 1 and i != 3 and i != 5:
+                print('each layer flatten shape:', weight[i].flatten().shape)
+                flatten_weights.extend(weight[i].flatten().tolist())
+        print("flatten weight shape:", (np.array(flatten_weights).shape))
+        return np.array(flatten_weights)
 
 
 def server_detect(X_test, Y_test, return_dict, prohibit, t):
@@ -66,7 +75,7 @@ def server_detect(X_test, Y_test, return_dict, prohibit, t):
         for w in range(args.k):
             if return_dict["alarm" + str(w)] == 1:
                 print('weight score:', np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])))
-                if acc_list[w] < max_acc - 5.0 or np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])) <= 0:
+                if acc_list[w] < max_acc - 8.0 or np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])) <= 0:
                     unnormal_num += 1
                     unnormal_list.append(w)
         if unnormal_num == 0:
@@ -97,7 +106,7 @@ def server_detect(X_test, Y_test, return_dict, prohibit, t):
                         use_gradient[w] = 0
                 for w in range(args.k):
                     if return_dict["alarm" + str(w)] == 0:
-                        if acc_list2[w] < max_acc2 - 5.0 or np.sum(flatten_weight(max_weight2) * flatten_weight(weight_list2[w])) <= 0:
+                        if acc_list2[w] < max_acc2 - 8.0 or np.sum(flatten_weight(max_weight2) * flatten_weight(weight_list2[w])) <= 0:
                             use_gradient[w] = 0
 
         else:
@@ -418,7 +427,7 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
                 bias_length = shape_size[3][i]
                 update_list.append(med_bias[b_count:b_count+bias_length].reshape(shape_size[1][i]))
                 b_count += bias_length
-            assert model_shape_size(update_list) == shape_size         
+            assert model_shape_size(update_list) == shape_size
             global_weights += update_list
 
         # Saving for the next update

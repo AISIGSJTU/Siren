@@ -41,7 +41,6 @@ def agent(i, X_shard, Y_shard, t, gpu_id, return_dict, X_test, Y_test, lr=None):
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
     # new added block---------------------------------------
-    
     if 'siren' in args.gar:
         X_test_original = X_test
         Y_test_original = Y_test
