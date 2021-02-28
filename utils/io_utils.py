@@ -55,7 +55,8 @@ def data_setup():
 
 		# Convert class vectors to binary class matrices.
 		Y_train = np_utils.to_categorical(Y_train_uncat, gv.NUM_CLASSES)
-		Y_test = np_utils.to_categorical(Y_test_uncat, gv.NUM_CLASSES)
+		# Y_test = np_utils.to_categorical(Y_test_uncat, gv.NUM_CLASSES)
+		Y_test = Y_test_uncat
 
 		X_train = X_train.astype('float32')
 		X_test = X_test.astype('float32')
@@ -70,7 +71,7 @@ def data_setup():
 			target_indices = np.random.choice(len(X_test), 100)
 			Server_X = X_train[target_indices]
 			print("Server dataset shape:", Server_X.shape)
-			Server_Y = Y_train[target_indices]
+			Server_Y = Y_train_uncat[target_indices]
 			print("server dataset initialized..")
 			print('server dataset shape:', Server_X.shape)
 			X_train = np.delete(X_train, target_indices, axis=0)
