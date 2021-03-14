@@ -47,7 +47,7 @@ def server_detect(X_test, Y_test, return_dict, prohibit, t):
     for w in range(args.k):
         use_gradient[w] = 1
     for w in range(args.k):
-        if return_dict["alarm" + str(w)] == 1 and prohibit[w] < 2:
+        if return_dict["alarm" + str(w)] == 1 and prohibit[w] < int(args.server_prohibit * args.T):
             alarm_num += 1
     print("alarm_num = %s" % alarm_num)
 
@@ -66,7 +66,7 @@ def server_detect(X_test, Y_test, return_dict, prohibit, t):
                 acc_list[w] = tmp_acc
                 weight_list[w] = tmp_local_weights - global_weights
                 # print('local weight type:', type(tmp_local_weights))
-                if tmp_acc > max_acc:
+                if tmp_acc > max_acc and prohibit[w] < int(args.server_prohibit * args.T):
                     max_acc = tmp_acc
                     max_weight = tmp_local_weights - global_weights
         print("max_acc = %s" % max_acc)
@@ -75,7 +75,7 @@ def server_detect(X_test, Y_test, return_dict, prohibit, t):
         for w in range(args.k):
             if return_dict["alarm" + str(w)] == 1:
                 print('weight score:', np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])))
-                if acc_list[w] < max_acc - 8.0 or np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])) <= 0:
+                if (acc_list[w] < max_acc - args.server_c * max_acc or np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])) <= 0) and prohibit[w] < int(args.server_prohibit * args.T):
                     unnormal_num += 1
                     unnormal_list.append(w)
         if unnormal_num == 0:
@@ -92,11 +92,11 @@ def server_detect(X_test, Y_test, return_dict, prohibit, t):
                     tmp_acc, tmp_loss = eval_minimal(X_test, Y_test, tmp_local_weights)
                     acc_list2[w] = tmp_acc
                     weight_list2[w] = tmp_local_weights - global_weights
-                    if tmp_acc > max_acc2:
+                    if tmp_acc > max_acc2 and prohibit[w] < int(args.server_prohibit * args.T):
                         max_acc2 = tmp_acc
                         max_weight2 = tmp_local_weights - global_weights
             print("new_max_acc = %s" % max_acc2)
-            if max_acc2 < max_acc - 3.0:
+            if max_acc2 < max_acc - args.server_c * max_acc:
                 for w in range(args.k):
                     if return_dict["alarm" + str(w)] == 0:
                         use_gradient[w] = 0
@@ -106,7 +106,7 @@ def server_detect(X_test, Y_test, return_dict, prohibit, t):
                         use_gradient[w] = 0
                 for w in range(args.k):
                     if return_dict["alarm" + str(w)] == 0:
-                        if acc_list2[w] < max_acc2 - 8.0 or np.sum(flatten_weight(max_weight2) * flatten_weight(weight_list2[w])) <= 0:
+                        if acc_list2[w] < max_acc2 - args.server_c * max_acc2 or np.sum(flatten_weight(max_weight2) * flatten_weight(weight_list2[w])) <= 0:
                             use_gradient[w] = 0
 
         else:
@@ -127,13 +127,13 @@ def server_detect(X_test, Y_test, return_dict, prohibit, t):
             tmp_acc, tmp_loss = eval_minimal(X_test, Y_test, tmp_local_weights)
             acc_list[w] = tmp_acc
             weight_list[w] = tmp_local_weights - global_weights
-            if tmp_acc > max_acc:
+            if tmp_acc > max_acc and prohibit[w] < int(args.server_prohibit * args.T):
                 max_acc = tmp_acc
                 max_weight = tmp_local_weights - global_weights
         print("max_acc = %s" % max_acc)
         for w in range(args.k):
             print('weight score of thoroughly checking:', np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])))
-            if acc_list[w] < max_acc - 5.0 or np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])) <= 0:
+            if acc_list[w] < max_acc - args.server_c * max_acc or np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])) <= 0:
                 use_gradient[w] = 0
     return_dict["use_gradient"] = use_gradient
     #return use_gradient
@@ -246,7 +246,7 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
             for i in range(args.k):
                 if use_gradient[i] == 0:
                     prohibit[i] += 1
-                if prohibit[i] > 1:
+                if prohibit[i] >= int(args.server_prohibit * args.T):
                     use_gradient[i] = 0
             alpha_i = 0
             for w in range(args.k):

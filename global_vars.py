@@ -140,6 +140,12 @@ def init():
                         help='the proportion of malicious clients in the system, currently only useful when the attack type are sign-flipping and label-flipping. Please use a float number between 0 and 1 as input.')
     parser.add_argument('--non_iidness', type=float, default=0,
                         help='the non_iidness of the data distribution on the clients, currently only works when the number of clients is the integral multiple of 10.')
+    parser.add_argument('--server_c', type=float, default=0.1,
+                        help='threshold used by server')
+    parser.add_argument('--client_c', type=float, default=0.8,
+                        help='threshold used by clients')
+    parser.add_argument('--server_prohibit', type=float, default=1.0,
+                        help='black list penalty. times = server_prohibit * T')
 
 
     global args

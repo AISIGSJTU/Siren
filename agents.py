@@ -18,12 +18,13 @@ import time
 # gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gv.mem_frac)
 
 def alarm(i, X_test, Y_test, t, gpu_id, return_dict, shared_weights=None, previous_local_weights=None):
+    args = gv.args
     print("alarm process_%s start" % i)
     shared_weights = np.load(gv.dir_name + 'global_weights_t%s.npy' % t, allow_pickle=True)
     previous_local_weights = np.load(gv.dir_name + 'ben_weights_%s_t%s.npy' % (i, t - 1), allow_pickle=True)
     local_success, local_loss = eval_minimal(X_test, Y_test, previous_local_weights)
     global_success, global_loss = eval_minimal(X_test, Y_test, shared_weights)
-    if local_success > (global_success + 3.0):
+    if local_success > (global_success + local_success * args.client_c):
         print("alarm!_%s" % i)
         return_dict["alarm" + str(i)] = 1
     else:
