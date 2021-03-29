@@ -142,7 +142,7 @@ def init():
                         help='the non_iidness of the data distribution on the clients, currently only works when the number of clients is the integral multiple of 10.')
     parser.add_argument('--server_c', type=float, default=0.1,
                         help='threshold used by server')
-    parser.add_argument('--client_c', type=float, default=0.8,
+    parser.add_argument('--client_c', type=float, default=0.08,
                         help='threshold used by clients')
     parser.add_argument('--server_prohibit', type=float, default=1.0,
                         help='black list penalty. times = server_prohibit * T')
