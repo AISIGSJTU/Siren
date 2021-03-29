@@ -68,7 +68,7 @@ def data_setup():
 		X_train /= 128.
 		X_test /= 128.
 		if gv.args.gar == 'siren':
-			target_indices = np.random.choice(len(X_test), 100)
+			target_indices = np.random.choice(len(X_test), gv.args.root_size)
 			Server_X = X_train[target_indices]
 			print("Server dataset shape:", Server_X.shape)
 			Server_Y = Y_train_uncat[target_indices]

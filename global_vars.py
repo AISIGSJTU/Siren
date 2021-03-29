@@ -146,6 +146,8 @@ def init():
                         help='threshold used by clients')
     parser.add_argument('--server_prohibit', type=float, default=1.0,
                         help='black list penalty. times = server_prohibit * T')
+    parser.add_argument('--root_size', type=float, default=100,
+                        help='the root test dataset size')
 
 
     global args
