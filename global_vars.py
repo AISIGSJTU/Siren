@@ -148,6 +148,8 @@ def init():
                         help='black list penalty. times = server_prohibit * T')
     parser.add_argument('--root_size', type=float, default=100,
                         help='the root test dataset size')
+    parser.add_argument('--forgive', type=float, default=0,
+                        help='the value used to reduce the penalty.')
 
 
     global args

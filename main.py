@@ -248,6 +248,8 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
                     prohibit[i] += 1
                 if prohibit[i] >= int(args.server_prohibit * args.T):
                     use_gradient[i] = 0
+                if use_gradient[i] == 1 and prohibit[i] > 0:
+                    prohibit[i] -= args.forgive
             alpha_i = 0
             for w in range(args.k):
                 if use_gradient[w] == 1:
