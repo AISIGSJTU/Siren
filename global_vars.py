@@ -142,13 +142,13 @@ def init():
                         help='the non_iidness of the data distribution on the clients, currently only works when the number of clients is the integral multiple of 10.')
     parser.add_argument('--server_c', type=float, default=0.1,
                         help='threshold used by server')
-    parser.add_argument('--client_c', type=float, default=0.08,
+    parser.add_argument('--client_c', type=float, default=0.04,
                         help='threshold used by clients')
-    parser.add_argument('--server_prohibit', type=float, default=1.0,
+    parser.add_argument('--server_prohibit', type=float, default=0.45,
                         help='black list penalty. times = server_prohibit * T')
     parser.add_argument('--root_size', type=float, default=100,
                         help='the root test dataset size')
-    parser.add_argument('--forgive', type=float, default=0,
+    parser.add_argument('--forgive', type=float, default=0.5,
                         help='the value used to reduce the penalty.')
 
 
