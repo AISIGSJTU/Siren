@@ -484,8 +484,8 @@ def main():
             len(X_train), len(X_train), replace=False)
         X_train_permuted = X_train[random_indices]
         Y_train_permuted = Y_train[random_indices]
-        X_train_shards = np.split(X_train_permuted, args.k)
-        Y_train_shards = np.split(Y_train_permuted, args.k)
+        X_train_shards = np.array_split(X_train_permuted, args.k)
+        Y_train_shards = np.array_split(Y_train_permuted, args.k)
     else:
         print("Create Non-IID Dataset-----------------------------------------")
         non_iidness = args.non_iidness
@@ -509,8 +509,8 @@ def main():
             X_train_new[x] = np.array(X_train_new[x])
             Y_train_new[x] = np.array(Y_train_new[x])
             random_indices = np.random.choice(len(X_train_new[x]), len(X_train_new[x]), replace=False)
-            X_train_permuted = np.split(X_train_new[x][random_indices], args.k // 10)
-            Y_train_permuted = np.split(Y_train_new[x][random_indices], args.k // 10)
+            X_train_permuted = np.array_split(X_train_new[x][random_indices], args.k // 10)
+            Y_train_permuted = np.array_split(Y_train_new[x][random_indices], args.k // 10)
             for q in range(args.k // 10):
                 X_train_shards.append(X_train_permuted[q])
                 Y_train_shards.append(Y_train_permuted[q])
