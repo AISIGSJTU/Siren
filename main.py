@@ -584,12 +584,12 @@ if __name__ == "__main__":
         with open('output/used_gradient.txt', 'w') as f:
             f.write('Used Gradient\n\n')
 
-        if args.attack_type == 'targeted_model_poisoning' or args.attack_type == 'stealthy_model_poisoning':
+        if (args.attack_type == 'targeted_model_poisoning' or args.attack_type == 'stealthy_model_poisoning') and args.mal:
             for i in range(args.k):
                 if i != gv.mal_agent_index:
                     with open('output/alarm_%s.txt' % i, 'w') as f:
                         f.write('Client Alarm %s\n\n' % i)
-        else:
+        elif args.mal:
             for i in range(args.k):
                 if i not in gv.mal_agent_index:
                     with open('output/alarm_%s.txt' % i, 'w') as f:
