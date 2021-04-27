@@ -540,7 +540,7 @@ def main():
                   (return_dict['mal_suc_count'], t_final * args.mal_num))
         else:
             _ = train_fn(X_train_shards, Y_train_shards, X_test, Y_test_uncat,
-                         return_dict)
+                         return_dict, Server_X=Server_X, Server_Y=Server_Y)
     else:
         manager = Manager()
         return_dict = manager.dict()
