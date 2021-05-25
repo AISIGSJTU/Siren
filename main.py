@@ -238,7 +238,7 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
 
         # ----------------------------------------------------------------
 
-        if args.gar == 'siren':
+        if args.gar == 'siren' and args.def_delay <= t:
             p_server = Process(target=server_detect, args=(Server_X, Server_Y, return_dict, prohibit, t))
             p_server.start()
             p_server.join()
@@ -289,7 +289,9 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
 
         # ---------------------------------------------------------------
 
-        if 'avg' in args.gar:
+        if 'avg' in args.gar or args.def_delay > t:
+            if args.def_delay <= t:
+                print('defense delay. using FedAVG in round', t)
             if args.mal:
                 count = 0
                 if args.attack_type == 'targeted_model_poisoning' or args.attack_type == 'stealthy_model_poisoning':
@@ -327,7 +329,9 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
                 for k in range(num_agents_per_time):
                     global_weights += alpha_i * return_dict[str(curr_agents[k])]
 
-        if 'siren' in args.gar:
+        if 'siren' in args.gar and args.def_delay <= t:
+            if args.def_delay <= t:
+                print('defense delay.')
             ben_delta = 0
             if args.mal:
                 count = 0
@@ -369,7 +373,9 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
                 for k in range(num_agents_per_time):
                     global_weights += alpha_i * return_dict[str(curr_agents[k])]
 
-        elif 'krum' in args.gar:
+        elif 'krum' in args.gar and args.def_delay <= t:
+            if args.def_delay <= t:
+                print('defense delay.')
             collated_weights = []
             collated_bias = []
             agg_num = int(num_agents_per_time-1-2)
@@ -400,7 +406,9 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
                 if krum_index in mal_agent_index:
                     krum_select_indices.append(t)
 
-        elif 'coomed' in args.gar:
+        elif 'coomed' in args.gar and args.def_delay <= t:
+            if args.def_delay <= t:
+                print('defense delay.')
             # Fix for mean aggregation first!
             weight_tuple_0 = return_dict[str(curr_agents[0])]
             weights_0, bias_0 = collate_weights(weight_tuple_0)

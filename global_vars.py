@@ -150,6 +150,8 @@ def init():
                         help='the root test dataset size')
     parser.add_argument('--forgive', type=float, default=0.5,
                         help='the value used to reduce the penalty.')
+    parser.add_argument("--def_delay", type=int, default=0,
+                        help='Delay of the defensive mechanism. Before the delay, defensive mechanisms do not work.')
 
 
     global args
