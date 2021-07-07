@@ -290,7 +290,7 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
         # ---------------------------------------------------------------
 
         if 'avg' in args.gar or args.def_delay > t:
-            if args.def_delay <= t:
+            if args.def_delay > t:
                 print('defense delay. using FedAVG in round', t)
             if args.mal:
                 count = 0
@@ -330,7 +330,7 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
                     global_weights += alpha_i * return_dict[str(curr_agents[k])]
 
         if 'siren' in args.gar and args.def_delay <= t:
-            if args.def_delay <= t:
+            if args.def_delay > t:
                 print('defense delay.')
             ben_delta = 0
             if args.mal:
@@ -374,7 +374,7 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
                     global_weights += alpha_i * return_dict[str(curr_agents[k])]
 
         elif 'krum' in args.gar and args.def_delay <= t:
-            if args.def_delay <= t:
+            if args.def_delay > t:
                 print('defense delay.')
             collated_weights = []
             collated_bias = []
@@ -407,7 +407,7 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
                     krum_select_indices.append(t)
 
         elif 'coomed' in args.gar and args.def_delay <= t:
-            if args.def_delay <= t:
+            if args.def_delay > t:
                 print('defense delay.')
             # Fix for mean aggregation first!
             weight_tuple_0 = return_dict[str(curr_agents[0])]
