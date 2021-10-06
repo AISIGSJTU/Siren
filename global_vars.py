@@ -160,13 +160,10 @@ def init():
 
     if args.mal:
         global mal_agent_index
-        if args.attack_type != 'targeted_model_poisoning' and args.attack_type != 'stealthy_model_poisoning':
-            mal_agent_index = []
-            for i in range(round(args.k*(1-args.malicious_proportion)), args.k):
-                mal_agent_index.append(i)
-                print("mal_agent_index:", mal_agent_index)
-        else:
-            mal_agent_index = args.k - 1
+        mal_agent_index = []
+        for i in range(round(args.k*(1-args.malicious_proportion)), args.k):
+            mal_agent_index.append(i)
+            print("mal_agent_index:", mal_agent_index)
 
     global gpu_ids
     if args.gpu_ids is not None:
@@ -192,8 +189,8 @@ def init():
             max_acc = 99.0
         elif args.dataset == 'fMNIST':
             max_acc = 99.0
-        max_agents_per_gpu = 8
-        mem_frac = 0.1
+        max_agents_per_gpu = 2
+        mem_frac = 0.15
     elif args.dataset == 'census':
         global DATA_DIM
         DATA_DIM = 104

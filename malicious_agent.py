@@ -432,7 +432,7 @@ def mal_all_algs(x, y, logits, agent_model, shared_weights, sess, mal_data_X, ma
     return final_delta
 
 
-def mal_agent_mp(X_shard, Y_shard, mal_data_X, mal_data_Y, t, gpu_id, return_dict,
+def mal_agent_mp(id, X_shard, Y_shard, mal_data_X, mal_data_Y, t, gpu_id, return_dict,
               mal_visible, X_test, Y_test):
     
     args = gv.args
@@ -514,8 +514,8 @@ def mal_agent_mp(X_shard, Y_shard, mal_data_X, mal_data_Y, t, gpu_id, return_dic
     return_dict['mal_success'] = eval_success
     print('Malicious Agent: success {}, loss {}'.format(
         eval_success, eval_loss))
-    with open('output/client_%s.txt' % gv.mal_agent_index, 'a') as f:
-        f.write('Mal_Agent {}: success {}, loss {}\n'.format(gv.mal_agent_index, eval_success, eval_loss))
+    with open('output/client_%s.txt' % id, 'a') as f:
+        f.write('Mal_Agent {}: success {}, loss {}\n'.format(id, eval_success, eval_loss))
     write_dict = {}
     # just to maintain ordering
     write_dict['t'] = t + 1
@@ -523,13 +523,13 @@ def mal_agent_mp(X_shard, Y_shard, mal_data_X, mal_data_Y, t, gpu_id, return_dic
     write_dict['eval_loss'] = eval_loss
     file_write(write_dict, purpose='mal_eval_loss')
 
-    return_dict[str(gv.mal_agent_index)] = np.array(final_delta)
-    np.save(gv.dir_name + 'mal_delta_t%s.npy' % t, final_delta)
-    if t > 0 and os.path.exists(gv.dir_name + 'mal_delta_t%s.npy' % (t-1)):
-        os.remove(gv.dir_name + 'mal_delta_t%s.npy' % (t-1))
-    np.save(gv.dir_name + 'ben_weights_%s_t%s.npy' % (gv.mal_agent_index, t), final_weights)
-    if t > 0 and os.path.exists(gv.dir_name + 'ben_weights_%s_t%s.npy' % (gv.mal_agent_index,t-1)):
-        os.remove(gv.dir_name + 'ben_weights_%s_t%s.npy' % (gv.mal_agent_index,t-1))
+    return_dict[str(id)] = np.array(final_delta)
+    np.save(gv.dir_name + 'mal_delta_%s_t%s.npy' % (id, t), final_delta)
+    if t > 0 and os.path.exists(gv.dir_name + 'mal_delta_%s_t%s.npy' % (id, t-1)):
+        os.remove(gv.dir_name + 'mal_delta_%s_t%s.npy' % (id, t-1))
+    np.save(gv.dir_name + 'ben_weights_%s_t%s.npy' % (id, t), final_weights)
+    if t > 0 and os.path.exists(gv.dir_name + 'ben_weights_%s_t%s.npy' % (id,t-1)):
+        os.remove(gv.dir_name + 'ben_weights_%s_t%s.npy' % (id,t-1))
 
     if 'auto' in args.mal_strat or 'multiple' in args.mal_obj:
         penul_weights = shared_weights + penul_delta
@@ -545,7 +545,7 @@ def mal_agent_mp(X_shard, Y_shard, mal_data_X, mal_data_Y, t, gpu_id, return_dic
         eval_success, eval_loss = eval_minimal(X_test, Y_test, penul_weights)
         print('Penul weights ---- Malicious Agent: success {}, loss {}'.format(
             eval_success, eval_loss))
-    return_dict["alarm" + str(gv.mal_agent_index)] = 1
+    return_dict["alarm" + str(id)] = 1
     return
 
 def mal_agent_other(i, X_shard, Y_shard, t, gpu_id, return_dict, X_test, Y_test, lr=None):

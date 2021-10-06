@@ -63,6 +63,7 @@ def server_detect(X_test, Y_test, return_dict, prohibit, t):
                 # print('local flatten:', tmp_local_weights.flatten().shape, tmp_local_weights.flatten())
                 # print('local weight shape', tmp_local_weights.shape)
                 tmp_acc, tmp_loss = eval_minimal(X_test, Y_test, tmp_local_weights)
+                print("acc on %s: %s" % (w, tmp_acc))
                 acc_list[w] = tmp_acc
                 weight_list[w] = tmp_local_weights - global_weights
                 # print('local weight type:', type(tmp_local_weights))
@@ -143,7 +144,9 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
     # Start the training process
     num_agents_per_time = int(args.C * args.k)
     simul_agents = gv.num_gpus * gv.max_agents_per_gpu
+    print("simul_agents:", simul_agents)
     simul_num = min(num_agents_per_time,simul_agents)
+    print("simul_num:", simul_num)
     alpha_i = 1.0 / args.k
     agent_indices = np.arange(args.k)
     if args.mal:
@@ -194,24 +197,21 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
                 if args.mal is False:
                     p = Process(target=agent, args=(i, X_train_shards[i],
                                                     Y_train_shards[i], t, gpu_id, return_dict, X_test, Y_test, lr))
-                elif args.attack_type == 'targeted_model_poisoning' or args.attack_type == 'stealthy_model_poisoning':
-                    if i != mal_agent_index:
-                        p = Process(target=agent, args=(i, X_train_shards[i],
-                                                        Y_train_shards[i], t, gpu_id, return_dict, X_test, Y_test,lr))
-                    else:
-                        p = Process(target=mal_agent_mp, args=(X_train_shards[mal_agent_index],
-                                                                   Y_train_shards[mal_agent_index], mal_data_X,
-                                                                   mal_data_Y, t,
-                                                                   gpu_id, return_dict, mal_visible, X_test, Y_test))
                 else:
                     if i not in mal_agent_index:
                         p = Process(target=agent, args=(i, X_train_shards[i],
-                                                        Y_train_shards[i], t, gpu_id, return_dict, X_test, Y_test, lr))
+                                                        Y_train_shards[i], t, gpu_id, return_dict, X_test, Y_test,lr))
                     else:
-                        p = Process(target=mal_agent_other, args=(i, X_train_shards[i],
-                                                                  Y_train_shards[i], t, gpu_id, return_dict, X_test,
-                                                                  Y_test,
-                                                                  lr))
+                        if args.attack_type == 'targeted_model_poisoning' or args.attack_type == 'stealthy_model_poisoning':
+                            p = Process(target=mal_agent_mp, args=(i, X_train_shards[i],
+                                                                   Y_train_shards[i], mal_data_X,
+                                                                   mal_data_Y, t,
+                                                                   gpu_id, return_dict, mal_visible, X_test, Y_test))
+                        else:
+                            p = Process(target=mal_agent_other, args=(i, X_train_shards[i],
+                                                                      Y_train_shards[i], t, gpu_id, return_dict, X_test,
+                                                                      Y_test,
+                                                                      lr))
                     mal_active = 1
 
                 p.start()
@@ -335,39 +335,23 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
             ben_delta = 0
             if args.mal:
                 count = 0
-                if args.attack_type == 'targeted_model_poisoning' or args.attack_type == 'stealthy_model_poisoning':
-                  for k in range(num_agents_per_time):
-                      if curr_agents[k] != mal_agent_index and use_gradient[k] != 0:
-                          if count == 0:
-                              ben_delta = alpha_i * return_dict[str(curr_agents[k])]
-                              np.save(gv.dir_name + 'ben_delta_sample%s.npy' % t, return_dict[str(curr_agents[k])])
-                              if t > 0 and os.path.exists(gv.dir_name + 'ben_delta_sample%s.npy' % (t-1)):
-                                  os.remove(gv.dir_name + 'ben_delta_sample%s.npy' % (t-1))
-                              count += 1
-                          else:
-                              ben_delta += alpha_i * return_dict[str(curr_agents[k])]
-                else:
-                  for k in range(num_agents_per_time):
-                      if curr_agents[k] not in mal_agent_index and use_gradient[k] != 0:
-                          if count == 0:
-                              ben_delta = alpha_i * return_dict[str(curr_agents[k])]
-                              np.save(gv.dir_name + 'ben_delta_sample%s.npy' % t, return_dict[str(curr_agents[k])])
-                              if t > 0 and os.path.exists(gv.dir_name + 'ben_delta_sample%s.npy' % (t-1)):
-                                  os.remove(gv.dir_name + 'ben_delta_sample%s.npy' % (t-1))
-                              count += 1
-                          else:
-                              ben_delta += alpha_i * return_dict[str(curr_agents[k])]
+                for k in range(num_agents_per_time):
+                    if curr_agents[k] not in mal_agent_index and use_gradient[k] != 0:
+                        if count == 0:
+                            ben_delta = alpha_i * return_dict[str(curr_agents[k])]
+                            np.save(gv.dir_name + 'ben_delta_sample%s.npy' % t, return_dict[str(curr_agents[k])])
+                            if t > 0 and os.path.exists(gv.dir_name + 'ben_delta_sample%s.npy' % (t - 1)):
+                                os.remove(gv.dir_name + 'ben_delta_sample%s.npy' % (t - 1))
+                            count += 1
+                        else:
+                            ben_delta += alpha_i * return_dict[str(curr_agents[k])]
 
                 np.save(gv.dir_name + 'ben_delta_t%s.npy' % t, ben_delta)
                 if t>0 and os.path.exists(gv.dir_name + 'ben_delta_t%s.npy' % (t-1)):
                     os.remove(gv.dir_name + 'ben_delta_t%s.npy' % (t-1))
-                if args.attack_type == 'targeted_model_poisoning' or args.attack_type == 'stealthy_model_poisoning':
-                    if use_gradient[mal_agent_index] == 1:
-                        global_weights += alpha_i * return_dict[str(mal_agent_index)]
-                else:
-                    for z in range(len(mal_agent_index)):
-                        if use_gradient[mal_agent_index[z]] == 1:
-                            global_weights += alpha_i * return_dict[str(mal_agent_index[z])]
+                for z in range(len(mal_agent_index)):
+                    if use_gradient[mal_agent_index[z]] == 1:
+                        global_weights += alpha_i * return_dict[str(mal_agent_index[z])]
                 global_weights += ben_delta
             else:
                 for k in range(num_agents_per_time):
