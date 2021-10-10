@@ -25,7 +25,7 @@ def flatten_weight(weight):
         flatten_weights = []
         for i in range(len(weight)):
             if i != 1 and i != 3 and i != 5:
-                print('each layer flatten shape:', weight[i].flatten().shape)
+                # print('each layer flatten shape:', weight[i].flatten().shape)
                 flatten_weights.extend(weight[i].flatten().tolist())
         print("flatten weight shape:", (np.array(flatten_weights).shape))
         return np.array(flatten_weights)
@@ -33,9 +33,9 @@ def flatten_weight(weight):
         flatten_weights = []
         for i in range(len(weight)):
             if i != 1 and i != 3 and i != 5:
-                print('each layer flatten shape:', weight[i].flatten().shape)
+                # print('each layer flatten shape:', weight[i].flatten().shape)
                 flatten_weights.extend(weight[i].flatten().tolist())
-        print("flatten weight shape:", (np.array(flatten_weights).shape))
+        # print("flatten weight shape:", (np.array(flatten_weights).shape))
         return np.array(flatten_weights)
 
 
@@ -171,7 +171,7 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
             print("alarm_", str(w), " = ", return_dict["alarm" + str(w)])
     # ----------------------------------------------------------------
     if args.gar == 'siren':
-        exist_mal = 0
+        exist_mal = [0, 0]
         flag = 0
         prohibit = {}
         for i in range(args.k):
@@ -198,20 +198,41 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
                     p = Process(target=agent, args=(i, X_train_shards[i],
                                                     Y_train_shards[i], t, gpu_id, return_dict, X_test, Y_test, lr))
                 else:
-                    if i not in mal_agent_index:
-                        p = Process(target=agent, args=(i, X_train_shards[i],
+                    if args.multi_attack:
+                        if i not in mal_agent_index:
+                            p = Process(target=agent, args=(i, X_train_shards[i],
                                                         Y_train_shards[i], t, gpu_id, return_dict, X_test, Y_test,lr))
-                    else:
-                        if args.attack_type == 'targeted_model_poisoning' or args.attack_type == 'stealthy_model_poisoning':
-                            p = Process(target=mal_agent_mp, args=(i, X_train_shards[i],
+                        else:
+                            if i == 9 or i == 8:
+                                p = Process(target=mal_agent_other, args=(i, X_train_shards[i],
+                                                                      Y_train_shards[i], t, gpu_id, return_dict, X_test,
+                                                                      Y_test,
+                                                                      lr, "label_flipping"))
+                            elif i == 7 or i == 6:
+                                p = Process(target=mal_agent_other, args=(i, X_train_shards[i],
+                                                                      Y_train_shards[i], t, gpu_id, return_dict, X_test,
+                                                                      Y_test,
+                                                                      lr, "sign_flipping"))
+                            else:
+                                p = Process(target=mal_agent_mp, args=(i, X_train_shards[i],
                                                                    Y_train_shards[i], mal_data_X,
                                                                    mal_data_Y, t,
                                                                    gpu_id, return_dict, mal_visible, X_test, Y_test))
+                    else:
+                        if i not in mal_agent_index:
+                            p = Process(target=agent, args=(i, X_train_shards[i],
+                                                        Y_train_shards[i], t, gpu_id, return_dict, X_test, Y_test,lr))
                         else:
-                            p = Process(target=mal_agent_other, args=(i, X_train_shards[i],
+                            if args.attack_type == 'targeted_model_poisoning' or args.attack_type == 'stealthy_model_poisoning':
+                                p = Process(target=mal_agent_mp, args=(i, X_train_shards[i],
+                                                                   Y_train_shards[i], mal_data_X,
+                                                                   mal_data_Y, t,
+                                                                   gpu_id, return_dict, mal_visible, X_test, Y_test))
+                            else:
+                                p = Process(target=mal_agent_other, args=(i, X_train_shards[i],
                                                                       Y_train_shards[i], t, gpu_id, return_dict, X_test,
                                                                       Y_test,
-                                                                      lr))
+                                                                      lr, args.attack_type))
                     mal_active = 1
 
                 p.start()
@@ -270,20 +291,33 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
             for i in range(args.k):
                 if use_gradient[i] == 0:
                     if flag == 0:
-                        exist_mal = 1
+                        exist_mal[0] = 1
                     flag = 1
                 else:
                     num += 1
-            if num == args.k:
+            prohibited = 0
+            for p in range(args.k):
+                if prohibit[p] < int(args.server_prohibit * args.T):
+                    prohibited += 1
+            if num == args.k - prohibited or exist_mal[0] == 0:
                 flag = 0
-            if flag and exist_mal:
-                if t-1>=0:
-                  global_weights = np.load(gv.dir_name + 'global_weights_t%s.npy' % (t-1), allow_pickle=True)
-                  exist_mal = 0
+            print("exist_mal:", exist_mal)
+            if flag and exist_mal[0]:
+                if t-1>=0 and exist_mal[0]:
+                    print("Use t-1 global weight -----------------------")
+                    global_weights = np.load(gv.dir_name + 'global_weights_t%s.npy' % (t-1), allow_pickle=True)
+                    exist_mal[1] = exist_mal[0]
+                    exist_mal[0] = 0
+                if t-2>=0 and exist_mal[0] and exist_mal[1]:
+                    print("Use t-2 global weight -------------------------")
+                    global_weights = np.load(gv.dir_name + 'global_weights_t%s.npy' % (t-2), allow_pickle=True)
+                    exist_mal = [0, 0]
                 else:
                   global_weights = np.load(gv.dir_name + 'global_weights_t%s.npy' % t, allow_pickle=True)
             else:
                 global_weights = np.load(gv.dir_name + 'global_weights_t%s.npy' % t, allow_pickle=True)
+                exist_mal[1] = exist_mal[0]
+                exist_mal[0] = 0
         else:
             global_weights = np.load(gv.dir_name + 'global_weights_t%s.npy' % t, allow_pickle=True)
 
@@ -294,19 +328,7 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
                 print('defense delay. using FedAVG in round', t)
             if args.mal:
                 count = 0
-                if args.attack_type == 'targeted_model_poisoning' or args.attack_type == 'stealthy_model_poisoning':
-                  for k in range(num_agents_per_time):
-                      if curr_agents[k] != mal_agent_index:
-                          if count == 0:
-                              ben_delta = alpha_i * return_dict[str(curr_agents[k])]
-                              np.save(gv.dir_name + 'ben_delta_sample%s.npy' % t, return_dict[str(curr_agents[k])])
-                              if t > 0 and os.path.exists(gv.dir_name + 'ben_delta_sample%s.npy' % (t-1)):
-                                  os.remove(gv.dir_name + 'ben_delta_sample%s.npy' % (t-1))
-                              count += 1
-                          else:
-                              ben_delta += alpha_i * return_dict[str(curr_agents[k])]
-                else:
-                  for k in range(num_agents_per_time):
+                for k in range(num_agents_per_time):
                       if curr_agents[k] not in mal_agent_index:
                           if count == 0:
                               ben_delta = alpha_i * return_dict[str(curr_agents[k])]
@@ -317,13 +339,10 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
                           else:
                               ben_delta += alpha_i * return_dict[str(curr_agents[k])]
                 np.save(gv.dir_name + 'ben_delta_t%s.npy' % t, ben_delta)
-                if t>0 and os.path.exists(gv.dir_name + 'ben_delta_t%s.npy' % (t-1)):
-                    os.remove(gv.dir_name + 'ben_delta_t%s.npy' % (t-1))
-                if args.attack_type == 'targeted_model_poisoning' or args.attack_type == 'stealthy_model_poisoning':
-                    global_weights += alpha_i * return_dict[str(mal_agent_index)]
-                else:
-                    for z in range(len(mal_agent_index)):
-                        global_weights += alpha_i * return_dict[str(mal_agent_index[z])]
+                # if t>0 and os.path.exists(gv.dir_name + 'ben_delta_t%s.npy' % (t-1)):
+                #     os.remove(gv.dir_name + 'ben_delta_t%s.npy' % (t-1))
+                for z in range(len(mal_agent_index)):
+                    global_weights += alpha_i * return_dict[str(mal_agent_index[z])]
                 global_weights += ben_delta
             else:
                 for k in range(num_agents_per_time):
@@ -347,8 +366,8 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
                             ben_delta += alpha_i * return_dict[str(curr_agents[k])]
 
                 np.save(gv.dir_name + 'ben_delta_t%s.npy' % t, ben_delta)
-                if t>0 and os.path.exists(gv.dir_name + 'ben_delta_t%s.npy' % (t-1)):
-                    os.remove(gv.dir_name + 'ben_delta_t%s.npy' % (t-1))
+                # if t>0 and os.path.exists(gv.dir_name + 'ben_delta_t%s.npy' % (t-1)):
+                #     os.remove(gv.dir_name + 'ben_delta_t%s.npy' % (t-1))
                 for z in range(len(mal_agent_index)):
                     if use_gradient[mal_agent_index[z]] == 1:
                         global_weights += alpha_i * return_dict[str(mal_agent_index[z])]
@@ -362,7 +381,7 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
                 print('defense delay.')
             collated_weights = []
             collated_bias = []
-            agg_num = int(num_agents_per_time-1-2)
+            agg_num = int(num_agents_per_time-1-args.k*args.malicious_proportion)
             for k in range(num_agents_per_time):
                 # weights_curr, bias_curr = collate_weights(return_dict[str(curr_agents[k])])
                 weights_curr, bias_curr = collate_weights(return_dict[str(k)])
@@ -383,12 +402,8 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
             krum_index = np.argmin(score_array)
             print(krum_index)
             global_weights += return_dict[str(krum_index)]
-            if args.attack_type == 'targeted_model_poisoning' or args.attack_type == 'stealthy_model_poisoning':
-                if krum_index == mal_agent_index:
-                    krum_select_indices.append(t)
-            else:
-                if krum_index in mal_agent_index:
-                    krum_select_indices.append(t)
+            if krum_index in mal_agent_index:
+                krum_select_indices.append(t)
 
         elif 'coomed' in args.gar and args.def_delay <= t:
             if args.def_delay > t:
@@ -427,8 +442,8 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
         # Saving for the next update
         np.save(gv.dir_name + 'global_weights_t%s.npy' %
                 (t + 1), global_weights)
-        if (t-1) > 0 and os.path.exists(gv.dir_name + 'global_weights_t%s.npy' % (t-1)):
-            os.remove(gv.dir_name + 'global_weights_t%s.npy' % (t-1))
+        if (t-2) > 0 and os.path.exists(gv.dir_name + 'global_weights_t%s.npy' % (t-2)):
+            os.remove(gv.dir_name + 'global_weights_t%s.npy' % (t-2))
 
 
         # Evaluate global weight
@@ -576,12 +591,7 @@ if __name__ == "__main__":
         with open('output/used_gradient.txt', 'w') as f:
             f.write('Used Gradient\n\n')
 
-        if (args.attack_type == 'targeted_model_poisoning' or args.attack_type == 'stealthy_model_poisoning') and args.mal:
-            for i in range(args.k):
-                if i != gv.mal_agent_index:
-                    with open('output/alarm_%s.txt' % i, 'w') as f:
-                        f.write('Client Alarm %s\n\n' % i)
-        elif args.mal:
+        if args.mal:
             for i in range(args.k):
                 if i not in gv.mal_agent_index:
                     with open('output/alarm_%s.txt' % i, 'w') as f:

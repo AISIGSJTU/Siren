@@ -548,13 +548,13 @@ def mal_agent_mp(id, X_shard, Y_shard, mal_data_X, mal_data_Y, t, gpu_id, return
     return_dict["alarm" + str(id)] = 1
     return
 
-def mal_agent_other(i, X_shard, Y_shard, t, gpu_id, return_dict, X_test, Y_test, lr=None):
+def mal_agent_other(i, X_shard, Y_shard, t, gpu_id, return_dict, X_test, Y_test, lr=None, attack_type=None):
 
     K.set_learning_phase(1)
 
     args = gv.args
 
-    if args.attack_type == 'label_flipping':
+    if attack_type == 'label_flipping':
         print("label flipped on client ", i)
         for w in range(Y_shard.shape[0]):
             if Y_shard[w][0] == 1.0:
@@ -679,7 +679,7 @@ def mal_agent_other(i, X_shard, Y_shard, t, gpu_id, return_dict, X_test, Y_test,
 
     local_weights = agent_model.get_weights()
     local_delta = local_weights - shared_weights
-    if args.attack_type == 'sign_flipping':
+    if attack_type == 'sign_flipping':
         local_delta = 4.0 * (-local_delta)
         print("malicious parameter: 4")
     local_weights = shared_weights + local_delta

@@ -120,7 +120,7 @@ def init():
                         help='Objective for simultaneous targeting')
     parser.add_argument("--mal_delay", type=int, default=0,
                         help='Delay for wait till converge')
-    parser.add_argument("--mal_boost", type=float, default=50,
+    parser.add_argument("--mal_boost", type=float, default=10,
                         help='Boosting factor for alternating minimization attack')
     parser.add_argument("--mal_E", type=float, default=5,
                         help='Benign training epochs for malicious agent')
@@ -152,7 +152,8 @@ def init():
                         help='the value used to reduce the penalty.')
     parser.add_argument("--def_delay", type=int, default=0,
                         help='Delay of the defensive mechanism. Before the delay, defensive mechanisms do not work.')
-
+    parser.add_argument("--multi_attack", type=int, default=0,
+                        help='Use multiple attacks in the system. This is an experimental function.')
 
     global args
     args = parser.parse_args()
@@ -170,6 +171,7 @@ def init():
         gpu_ids = args.gpu_ids
     else:
         gpu_ids = [3,4]
+    print("gpu_ids:", gpu_ids)
     global num_gpus
     num_gpus = len(gpu_ids)
 
@@ -189,8 +191,8 @@ def init():
             max_acc = 99.0
         elif args.dataset == 'fMNIST':
             max_acc = 99.0
-        max_agents_per_gpu = 2
-        mem_frac = 0.15
+        max_agents_per_gpu = 3
+        mem_frac = 0.05
     elif args.dataset == 'census':
         global DATA_DIM
         DATA_DIM = 104
