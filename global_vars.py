@@ -127,7 +127,7 @@ def init():
     parser.add_argument("--ls", type=int, default=1,
                         help='Training steps for each malicious step')
     parser.add_argument("--gar", type=str, default='avg',
-                        help='Gradient Aggregation Rule', choices=['avg', 'krum', 'coomed', 'siren'])
+                        help='Gradient Aggregation Rule', choices=['avg', 'krum', 'coomed', 'siren', 'multi-krum'])
     parser.add_argument("--rho", type=float, default=1e-4,
                         help='Weighting factor for distance constraints')
     parser.add_argument("--data_rep", type=float, default=10,
@@ -191,7 +191,7 @@ def init():
             max_acc = 99.0
         elif args.dataset == 'fMNIST':
             max_acc = 99.0
-        max_agents_per_gpu = 3
+        max_agents_per_gpu = 5
         mem_frac = 0.05
     elif args.dataset == 'census':
         global DATA_DIM

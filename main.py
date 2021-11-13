@@ -161,6 +161,8 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
     loss_count = 0
     if args.gar == 'krum':
         krum_select_indices = []
+    if args.gar == 'multi-krum':
+        multi_krum_select_indices = []
 
     # new added block-------------------------------------------------
     if args.gar == 'siren':
@@ -203,12 +205,12 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
                             p = Process(target=agent, args=(i, X_train_shards[i],
                                                         Y_train_shards[i], t, gpu_id, return_dict, X_test, Y_test,lr))
                         else:
-                            if i == 9 or i == 8:
+                            if i % 3 == 0:
                                 p = Process(target=mal_agent_other, args=(i, X_train_shards[i],
                                                                       Y_train_shards[i], t, gpu_id, return_dict, X_test,
                                                                       Y_test,
                                                                       lr, "label_flipping"))
-                            elif i == 7 or i == 6:
+                            elif i % 3 == 2:
                                 p = Process(target=mal_agent_other, args=(i, X_train_shards[i],
                                                                       Y_train_shards[i], t, gpu_id, return_dict, X_test,
                                                                       Y_test,
@@ -376,12 +378,12 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
                 for k in range(num_agents_per_time):
                     global_weights += alpha_i * return_dict[str(curr_agents[k])]
 
-        elif 'krum' in args.gar and args.def_delay <= t:
+        elif args.gar == 'krum' and args.def_delay <= t:
             if args.def_delay > t:
                 print('defense delay.')
             collated_weights = []
             collated_bias = []
-            agg_num = int(num_agents_per_time-1-args.k*args.malicious_proportion)
+            agg_num = int(num_agents_per_time-2-args.k*args.malicious_proportion)
             for k in range(num_agents_per_time):
                 # weights_curr, bias_curr = collate_weights(return_dict[str(curr_agents[k])])
                 weights_curr, bias_curr = collate_weights(return_dict[str(k)])
@@ -404,6 +406,46 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
             global_weights += return_dict[str(krum_index)]
             if krum_index in mal_agent_index:
                 krum_select_indices.append(t)
+                print("krum_select_indices: ", krum_select_indices)
+        
+        elif 'multi-krum' in args.gar and args.def_delay <= t:
+            if args.def_delay > t:
+                print('defense delay.')
+            selected = []
+            collated_weights = []
+            collated_bias = []
+            agg_num = int(num_agents_per_time-2-args.k*args.malicious_proportion)
+            for k in range(num_agents_per_time):
+                # weights_curr, bias_curr = collate_weights(return_dict[str(curr_agents[k])])
+                weights_curr, bias_curr = collate_weights(return_dict[str(k)])
+                collated_weights.append(weights_curr)
+                collated_bias.append(collated_bias)
+            while num_agents_per_time - len(selected) > 2*args.k*args.malicious_proportion:
+                score_array = np.zeros(num_agents_per_time)
+                for k in range(num_agents_per_time):
+                    if k in selected:
+                        score_array[k] = float('inf')
+                        continue
+                    dists = []
+                    for i in range(num_agents_per_time):
+                        if i == k or i in selected:
+                            continue
+                        else:
+                            dists.append(np.linalg.norm(collated_weights[k]-collated_weights[i]))
+                    dists = np.sort(np.array(dists))
+                    dists_subset = dists[:(agg_num-len(selected))]
+                    score_array[k] = np.sum(dists_subset)
+                print(score_array)
+                krum_index = np.argmin(score_array)
+                print(krum_index)
+                selected.append(krum_index)
+            delta = []
+            for index in selected:
+                if (index in mal_agent_index) and (t not in multi_krum_select_indices):
+                    multi_krum_select_indices.append(t)
+                delta.append(return_dict[str(index)])
+            global_weights += np.mean(delta, axis=0)
+            print("multi_krum_select_indices: ", multi_krum_select_indices)
 
         elif 'coomed' in args.gar and args.def_delay <= t:
             if args.def_delay > t:
