@@ -132,6 +132,8 @@ def agent(i, X_shard, Y_shard, t, gpu_id, return_dict, X_test, Y_test, lr=None):
 
     if args.k > 1:
         config = tf.ConfigProto(gpu_options=gv.gpu_options)
+        config.intra_op_parallelism_threads = 12
+        config.inter_op_parallelism_threads = 2
         # config.gpu_options.allow_growth = True
         sess = tf.Session(config=config)
     elif args.k == 1:
@@ -185,6 +187,8 @@ def master():
     args = gv.args
     print('Initializing master model')
     config = tf.ConfigProto(gpu_options=gv.gpu_options)
+    config.intra_op_parallelism_threads = 12
+    config.inter_op_parallelism_threads = 2
     config.gpu_options.allow_growth = True
     sess = tf.Session(config=config)
     K.set_session(sess)
@@ -196,6 +200,8 @@ def master():
         global_model = census_model_1()
     elif args.dataset == 'CIFAR-10':
         global_model = model_mnist(type=args.model_num)
+    # if args.model_num < 9:
+    #     global_model.summary()
     global_model.summary()
     global_weights_np = global_model.get_weights()
     np.save(gv.dir_name + 'global_weights_t0.npy', global_weights_np)

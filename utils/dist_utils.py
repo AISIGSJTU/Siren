@@ -15,15 +15,19 @@ def collate_weights(delta_curr):
         flat_layer = delta_curr[l].flatten()
         if l == 0:
             delta_curr_w = flat_layer
+            delta_curr_all = flat_layer
         elif l == 1:
             delta_curr_b = flat_layer
+            delta_curr_all = np.concatenate((delta_curr_all, flat_layer))
         elif l % 2 == 0:
             delta_curr_w = np.concatenate(
                 (delta_curr_w, flat_layer))
+            delta_curr_all = np.concatenate((delta_curr_all, flat_layer))
         elif (l + 1) % 2 == 0:
             delta_curr_b = np.concatenate(
                 (delta_curr_b, flat_layer))
-    return delta_curr_w, delta_curr_b
+            delta_curr_all = np.concatenate((delta_curr_all, flat_layer))
+    return delta_curr_w, delta_curr_b, delta_curr_all
 
 def model_shape_size(delta_curr):
     shape_w = []
@@ -42,6 +46,18 @@ def model_shape_size(delta_curr):
             size_b.append(size)
             shape_b.append(layer_shape)
     return [shape_w, shape_b, size_w, size_b]
+
+def model_shape_size_all(delta_curr):
+    shape_all = []
+    size_all = []
+    for l in range(len(delta_curr)):
+        layer_shape = delta_curr[l].shape
+        size = 1
+        for item in layer_shape:
+            size *= item
+        size_all.append(size)
+        shape_all.append(layer_shape)
+    return [shape_all, size_all]
 
 def est_accuracy(mal_visible, t):
     args = gv.args

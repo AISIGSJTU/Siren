@@ -120,14 +120,14 @@ def init():
                         help='Objective for simultaneous targeting')
     parser.add_argument("--mal_delay", type=int, default=0,
                         help='Delay for wait till converge')
-    parser.add_argument("--mal_boost", type=float, default=10,
+    parser.add_argument("--mal_boost", type=float, default=2,
                         help='Boosting factor for alternating minimization attack')
     parser.add_argument("--mal_E", type=float, default=5,
                         help='Benign training epochs for malicious agent')
     parser.add_argument("--ls", type=int, default=1,
                         help='Training steps for each malicious step')
     parser.add_argument("--gar", type=str, default='avg',
-                        help='Gradient Aggregation Rule', choices=['avg', 'krum', 'coomed', 'siren', 'multi-krum'])
+                        help='Gradient Aggregation Rule', choices=['avg', 'krum', 'coomed', 'siren', 'multi-krum', 'fltrust'])
     parser.add_argument("--rho", type=float, default=1e-4,
                         help='Weighting factor for distance constraints')
     parser.add_argument("--data_rep", type=float, default=10,
@@ -192,6 +192,8 @@ def init():
         elif args.dataset == 'fMNIST':
             max_acc = 99.0
         max_agents_per_gpu = 5
+        if args.model_num > 8:
+            max_agents_per_gpu = 1
         mem_frac = 0.05
     elif args.dataset == 'census':
         global DATA_DIM

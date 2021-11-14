@@ -6,13 +6,13 @@ import numpy as np
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from multiprocessing import Process, Manager
-
+from keras.utils import np_utils
 from utils.io_utils import data_setup, mal_data_setup
 import global_vars as gv
 from agents import agent, master
 from utils.eval_utils import eval_func, eval_minimal
 from malicious_agent import mal_agent_mp, mal_agent_other
-from utils.dist_utils import collate_weights, model_shape_size
+from utils.dist_utils import collate_weights, model_shape_size, model_shape_size_all
 from utils.io_utils import file_write
 from collections import OrderedDict
 import tensorflow as tf
@@ -21,22 +21,27 @@ import random
 import math
 
 def flatten_weight(weight):
-    if args.dataset == "fMNIST":
-        flatten_weights = []
-        for i in range(len(weight)):
-            if i != 1 and i != 3 and i != 5:
-                # print('each layer flatten shape:', weight[i].flatten().shape)
-                flatten_weights.extend(weight[i].flatten().tolist())
-        print("flatten weight shape:", (np.array(flatten_weights).shape))
-        return np.array(flatten_weights)
-    if args.dataset == "CIFAR-10":
-        flatten_weights = []
-        for i in range(len(weight)):
-            if i != 1 and i != 3 and i != 5:
-                # print('each layer flatten shape:', weight[i].flatten().shape)
-                flatten_weights.extend(weight[i].flatten().tolist())
-        # print("flatten weight shape:", (np.array(flatten_weights).shape))
-        return np.array(flatten_weights)
+    # if args.dataset == "fMNIST":
+    #     flatten_weights = []
+    #     for i in range(len(weight)):
+    #         if i != 1 and i != 3 and i != 5:
+    #             # print('each layer flatten shape:', weight[i].flatten().shape)
+    #             flatten_weights.extend(weight[i].flatten().tolist())
+    #     print("flatten weight shape:", (np.array(flatten_weights).shape))
+    #     return np.array(flatten_weights)
+    # if args.dataset == "CIFAR-10":
+    #     flatten_weights = []
+    #     for i in range(len(weight)):
+    #         if i != 1 and i != 3 and i != 5:
+    #             # print('each layer flatten shape:', weight[i].flatten().shape)
+    #             flatten_weights.extend(weight[i].flatten().tolist())
+    #     # print("flatten weight shape:", (np.array(flatten_weights).shape))
+    #     return np.array(flatten_weights)
+    _, _, flatten_weights = collate_weights(weight)
+    return flatten_weights
+
+def cosine_similarity(weights1, weights2):
+    return np.dot(weights1, weights2) / (np.linalg.norm(weights1 + 1e-9) * np.linalg.norm(weights2 + 1e-9))
 
 
 def server_detect(X_test, Y_test, return_dict, prohibit, t):
@@ -75,8 +80,9 @@ def server_detect(X_test, Y_test, return_dict, prohibit, t):
         unnormal_list = []
         for w in range(args.k):
             if return_dict["alarm" + str(w)] == 1:
-                print('weight score:', np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])))
-                if (acc_list[w] < max_acc - args.server_c * max_acc or np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])) <= 0) and prohibit[w] < int(args.server_prohibit * args.T):
+                # print('weight score:', np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])))
+                print('weight score:', cosine_similarity(flatten_weight(max_weight), flatten_weight(weight_list[w])))
+                if (acc_list[w] < max_acc - args.server_c * max_acc or cosine_similarity(flatten_weight(max_weight), flatten_weight(weight_list[w])) <= 0) and prohibit[w] < int(args.server_prohibit * args.T):
                     unnormal_num += 1
                     unnormal_list.append(w)
         if unnormal_num == 0:
@@ -107,7 +113,7 @@ def server_detect(X_test, Y_test, return_dict, prohibit, t):
                         use_gradient[w] = 0
                 for w in range(args.k):
                     if return_dict["alarm" + str(w)] == 0:
-                        if acc_list2[w] < max_acc2 - args.server_c * max_acc2 or np.sum(flatten_weight(max_weight2) * flatten_weight(weight_list2[w])) <= 0:
+                        if acc_list2[w] < max_acc2 - args.server_c * max_acc2 or cosine_similarity(flatten_weight(max_weight2), flatten_weight(weight_list2[w])) <= 0:
                             use_gradient[w] = 0
 
         else:
@@ -133,8 +139,8 @@ def server_detect(X_test, Y_test, return_dict, prohibit, t):
                 max_weight = tmp_local_weights - global_weights
         print("max_acc = %s" % max_acc)
         for w in range(args.k):
-            print('weight score of thoroughly checking:', np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])))
-            if acc_list[w] < max_acc - args.server_c * max_acc or np.sum(flatten_weight(max_weight) * flatten_weight(weight_list[w])) <= 0:
+            print('weight score of thoroughly checking:', cosine_similarity(flatten_weight(max_weight), flatten_weight(weight_list[w])))
+            if acc_list[w] < max_acc - args.server_c * max_acc or cosine_similarity(flatten_weight(max_weight), flatten_weight(weight_list[w])) <= 0:
                 use_gradient[w] = 0
     return_dict["use_gradient"] = use_gradient
     #return use_gradient
@@ -181,12 +187,18 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
     while return_dict['eval_success'] < gv.max_acc and t < args.T:
         print('Time step %s' % t)
 
+        if args.gar == 'fltrust':
+            # agent(args.k+1, Server_X, np_utils.to_categorical(Server_Y, gv.NUM_CLASSES), t, gv.gpu_ids[0], return_dict, X_test, Y_test, lr)
+            p = Process(target=agent, args=(args.k+1, Server_X, np_utils.to_categorical(Server_Y, gv.NUM_CLASSES), t, gv.gpu_ids[0], return_dict, X_test, Y_test, lr))
+            p.start()
+            p.join()
+            print("Train FLTrust Server Model Finished.")
+
         process_list = []
         mal_active = 0
         curr_agents = np.random.choice(agent_indices, num_agents_per_time,
                                        replace=False)
         print('Set of agents chosen: %s' % curr_agents)
-
         k = 0
         agents_left = 1e4
         while k < num_agents_per_time:
@@ -351,8 +363,6 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
                     global_weights += alpha_i * return_dict[str(curr_agents[k])]
 
         if 'siren' in args.gar and args.def_delay <= t:
-            if args.def_delay > t:
-                print('defense delay.')
             ben_delta = 0
             if args.mal:
                 count = 0
@@ -377,18 +387,49 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
             else:
                 for k in range(num_agents_per_time):
                     global_weights += alpha_i * return_dict[str(curr_agents[k])]
+        
+        elif 'fltrust' in args.gar and args.def_delay <= t:
+            weight_updates = []
+            for k in range(num_agents_per_time):
+                # weights_curr, bias_curr = collate_weights(return_dict[str(curr_agents[k])])
+                _, _, all_curr = collate_weights(return_dict[str(k)])
+                weight_updates.append(all_curr)
+            _, _, baseline = collate_weights(return_dict[str(args.k+1)])
+            cos_sim = []
+            for each_local_update in weight_updates:
+                cos_sim.append(cosine_similarity(baseline, each_local_update))
+            print("cos_sim: ", cos_sim)
+            cos_sim = np.maximum(0, cos_sim) # relu
+            print("trust score: ", cos_sim)
+            weighted_trust_score = cos_sim / (np.sum(cos_sim) + 1e-9)
+            print("weighted_trust_score: ", weighted_trust_score)
+            # normalize the magnitudes and weight by the trust score
+            for id in range(len(weight_updates)):
+                weight_updates[id] = weight_updates[id] * weighted_trust_score[id] * (np.linalg.norm(baseline) / np.linalg.norm(weight_updates[id]+1e-9))
+            # update the global model
+            global_updates = np.sum(weight_updates, axis=0)
+            shape_size = model_shape_size_all(return_dict[str(args.k+1)])
+            num_layers = len(shape_size[0])
+            update_list = []
+            all_count = 0
+            for i in range(num_layers):
+                weights_length = shape_size[1][i]
+                update_list.append(global_updates[all_count:all_count+weights_length].reshape(shape_size[0][i]))
+                all_count += weights_length
+            assert model_shape_size_all(update_list) == shape_size
+            global_weights += update_list
 
         elif args.gar == 'krum' and args.def_delay <= t:
-            if args.def_delay > t:
-                print('defense delay.')
             collated_weights = []
             collated_bias = []
+            collated_all = []
             agg_num = int(num_agents_per_time-2-args.k*args.malicious_proportion)
             for k in range(num_agents_per_time):
                 # weights_curr, bias_curr = collate_weights(return_dict[str(curr_agents[k])])
-                weights_curr, bias_curr = collate_weights(return_dict[str(k)])
+                weights_curr, bias_curr, all_curr = collate_weights(return_dict[str(k)])
                 collated_weights.append(weights_curr)
-                collated_bias.append(collated_bias)
+                collated_bias.append(bias_curr)
+                collated_all.append(all_curr)
             score_array = np.zeros(num_agents_per_time)
             for k in range(num_agents_per_time):
                 dists = []
@@ -396,7 +437,8 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
                     if i == k:
                         continue
                     else:
-                        dists.append(np.linalg.norm(collated_weights[k]-collated_weights[i]))
+                        # dists.append(np.linalg.norm(collated_weights[k]-collated_weights[i]))
+                        dists.append(np.linalg.norm(collated_all[k]-collated_all[i]))
                 dists = np.sort(np.array(dists))
                 dists_subset = dists[:agg_num]
                 score_array[k] = np.sum(dists_subset)
@@ -409,17 +451,17 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
                 print("krum_select_indices: ", krum_select_indices)
         
         elif 'multi-krum' in args.gar and args.def_delay <= t:
-            if args.def_delay > t:
-                print('defense delay.')
             selected = []
             collated_weights = []
             collated_bias = []
+            collated_all = []
             agg_num = int(num_agents_per_time-2-args.k*args.malicious_proportion)
             for k in range(num_agents_per_time):
                 # weights_curr, bias_curr = collate_weights(return_dict[str(curr_agents[k])])
-                weights_curr, bias_curr = collate_weights(return_dict[str(k)])
+                weights_curr, bias_curr, all_curr = collate_weights(return_dict[str(k)])
                 collated_weights.append(weights_curr)
                 collated_bias.append(collated_bias)
+                collated_all.append(all_curr)
             while num_agents_per_time - len(selected) > 2*args.k*args.malicious_proportion:
                 score_array = np.zeros(num_agents_per_time)
                 for k in range(num_agents_per_time):
@@ -431,7 +473,8 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
                         if i == k or i in selected:
                             continue
                         else:
-                            dists.append(np.linalg.norm(collated_weights[k]-collated_weights[i]))
+                            # dists.append(np.linalg.norm(collated_weights[k]-collated_weights[i]))
+                            dists.append(np.linalg.norm(collated_all[k]-collated_all[i]))
                     dists = np.sort(np.array(dists))
                     dists_subset = dists[:(agg_num-len(selected))]
                     score_array[k] = np.sum(dists_subset)
@@ -448,38 +491,72 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
             print("multi_krum_select_indices: ", multi_krum_select_indices)
 
         elif 'coomed' in args.gar and args.def_delay <= t:
-            if args.def_delay > t:
-                print('defense delay.')
+            # Fix for mean aggregation first!
+            # weight_tuple_0 = return_dict[str(curr_agents[0])]
+            # weights_0, bias_0, all_0 = collate_weights(weight_tuple_0)
+            # weights_array = np.zeros((num_agents_per_time,len(weights_0)))
+            # bias_array = np.zeros((num_agents_per_time,len(bias_0)))
+            # all_array = np.zeros((num_agents_per_time,len(all_0)))
+            # # collated_weights = []
+            # # collated_bias = []
+            # for k in range(num_agents_per_time):
+            #     weight_tuple = return_dict[str(curr_agents[k])]
+            #     weights_curr, bias_curr, all_curr = collate_weights(weight_tuple)
+            #     weights_array[k,:] = weights_curr
+            #     bias_array[k,:] = bias_curr
+            #     all_array[k,:] = all_curr
+            # shape_size = model_shape_size(weight_tuple)
+            # # weights_array = np.reshape(np.array(collated_weights),(len(weights_curr),num_agents_per_time))
+            # # bias_array = np.reshape(np.array(collated_bias),(len(bias_curr),num_agents_per_time))
+            # med_weights = np.median(weights_array,axis=0)
+            # med_bias = np.median(bias_array,axis=0)
+            # med_all = np.median(all_array, axis=0)
+            # num_layers = len(shape_size[0])
+            # update_list = []
+            # w_count = 0
+            # b_count = 0
+            # for i in range(num_layers):
+            #     weights_length = shape_size[2][i]
+            #     update_list.append(med_weights[w_count:w_count+weights_length].reshape(shape_size[0][i]))
+            #     w_count += weights_length
+            #     bias_length = shape_size[3][i]
+            #     update_list.append(med_bias[b_count:b_count+bias_length].reshape(shape_size[1][i]))
+            #     b_count += bias_length
+            # assert model_shape_size(update_list) == shape_size
+            # global_weights += update_list
+            
             # Fix for mean aggregation first!
             weight_tuple_0 = return_dict[str(curr_agents[0])]
-            weights_0, bias_0 = collate_weights(weight_tuple_0)
+            weights_0, bias_0, all_0 = collate_weights(weight_tuple_0)
             weights_array = np.zeros((num_agents_per_time,len(weights_0)))
             bias_array = np.zeros((num_agents_per_time,len(bias_0)))
+            all_array = np.zeros((num_agents_per_time,len(all_0)))
             # collated_weights = []
             # collated_bias = []
             for k in range(num_agents_per_time):
                 weight_tuple = return_dict[str(curr_agents[k])]
-                weights_curr, bias_curr = collate_weights(weight_tuple)
+                weights_curr, bias_curr, all_curr = collate_weights(weight_tuple)
                 weights_array[k,:] = weights_curr
                 bias_array[k,:] = bias_curr
-            shape_size = model_shape_size(weight_tuple)
+                all_array[k,:] = all_curr
+            shape_size = model_shape_size_all(weight_tuple)
             # weights_array = np.reshape(np.array(collated_weights),(len(weights_curr),num_agents_per_time))
             # bias_array = np.reshape(np.array(collated_bias),(len(bias_curr),num_agents_per_time))
             med_weights = np.median(weights_array,axis=0)
             med_bias = np.median(bias_array,axis=0)
+            med_all = np.median(all_array, axis=0)
             num_layers = len(shape_size[0])
             update_list = []
-            w_count = 0
-            b_count = 0
+            # w_count = 0
+            # b_count = 0
+            all_count = 0
             for i in range(num_layers):
-                weights_length = shape_size[2][i]
-                update_list.append(med_weights[w_count:w_count+weights_length].reshape(shape_size[0][i]))
-                w_count += weights_length
-                bias_length = shape_size[3][i]
-                update_list.append(med_bias[b_count:b_count+bias_length].reshape(shape_size[1][i]))
-                b_count += bias_length
-            assert model_shape_size(update_list) == shape_size
+                weights_length = shape_size[1][i]
+                update_list.append(med_all[all_count:all_count+weights_length].reshape(shape_size[0][i]))
+                all_count += weights_length
+            assert model_shape_size_all(update_list) == shape_size
             global_weights += update_list
+
 
         # Saving for the next update
         np.save(gv.dir_name + 'global_weights_t%s.npy' %
@@ -521,7 +598,7 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
 def main():
     Server_X = None
     Server_Y = None
-    if args.gar == 'siren':
+    if args.gar == 'siren' or args.gar=='fltrust':
         X_train, Y_train, X_test, Y_test, Y_test_uncat, Server_X, Server_Y = data_setup()
     else:
         X_train, Y_train, X_test, Y_test, Y_test_uncat = data_setup()

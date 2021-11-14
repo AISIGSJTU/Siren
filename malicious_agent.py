@@ -33,6 +33,8 @@ def benign_train(x, y, agent_model, logits, X_shard, Y_shard, sess, shared_weigh
 
     if args.k > 1:
         config = tf.ConfigProto(gpu_options=gv.gpu_options)
+        config.intra_op_parallelism_threads = 12
+        config.inter_op_parallelism_threads = 2
         # config.gpu_options.allow_growth = True
         temp_sess = tf.Session(config=config)
     elif args.k == 1:
@@ -481,6 +483,8 @@ def mal_agent_mp(id, X_shard, Y_shard, mal_data_X, mal_data_Y, t, gpu_id, return
         labels=y, logits=logits))
 
     config = tf.ConfigProto(gpu_options=gv.gpu_options)
+    config.intra_op_parallelism_threads = 12
+    config.inter_op_parallelism_threads = 2
     # config.gpu_options.allow_growth = True
     sess = tf.Session(config=config)
     K.set_session(sess)
@@ -651,6 +655,8 @@ def mal_agent_other(i, X_shard, Y_shard, t, gpu_id, return_dict, X_test, Y_test,
 
     if args.k > 1:
         config = tf.ConfigProto(gpu_options=gv.gpu_options)
+        config.intra_op_parallelism_threads = 12
+        config.inter_op_parallelism_threads = 2
         # config.gpu_options.allow_growth = True
         sess = tf.Session(config=config)
     elif args.k == 1:

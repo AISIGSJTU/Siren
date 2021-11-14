@@ -44,7 +44,7 @@ def file_write(write_dict, purpose='global_eval_loss'):
 def data_setup():
 	args = gv.args
 	if 'MNIST' in args.dataset:
-		if args.gar == 'siren':
+		if args.gar == 'siren' or args.gar == 'fltrust':
 			X_train, Y_train, X_test, Y_test, Server_X, Server_Y = data_mnist()
 		else:
 			X_train, Y_train, X_test, Y_test = data_mnist()
@@ -67,7 +67,7 @@ def data_setup():
 		X_test -= mean_image
 		X_train /= 128.
 		X_test /= 128.
-		if gv.args.gar == 'siren':
+		if gv.args.gar == 'siren' or args.gar == 'fltrust':
 			target_indices = np.random.choice(len(X_test), gv.args.root_size)
 			Server_X = X_train[target_indices]
 			print("Server dataset shape:", Server_X.shape)
@@ -85,7 +85,7 @@ def data_setup():
 		print(Y_test)
 		print(Y_test_uncat)
 		print('Loaded Census data')
-	if args.gar == 'siren':
+	if args.gar == 'siren' or args.gar == 'fltrust':
 		return X_train, Y_train, X_test, Y_test, Y_test_uncat, Server_X, Server_Y
 	else:
 		return X_train, Y_train, X_test, Y_test, Y_test_uncat
