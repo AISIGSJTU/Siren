@@ -16,12 +16,10 @@ from utils.dist_utils import collate_weights, model_shape_size, model_shape_size
 from utils.io_utils import file_write
 from collections import OrderedDict
 import tensorflow as tf
-# import torch
 import time
 import random
 import math
-# from adaptive_attack import *
-# import torch
+from adaptive_attack import *
 
 def flatten_weight(weight):
     # if args.dataset == "fMNIST":
@@ -264,20 +262,19 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
 
         print('Joined all processes for time step %s' % t)
 
-        # if args.attack_type == 'adaptive_attack_krum':
-        #     print('Executing adaptive attack for Krum')
-        #     mal_updates = []
-        #     mal_updates = np.array(mal_updates)
-        #     for mal_index in gv.mal_agent_index:
-        #         param_grad = torch.from_numpy(return_dict[str(mal_index)].astype('float32'))
-        #         mal_updates=param_grad[None, :] if len(mal_updates)==0 else torch.cat((mal_updates,param_grad[None,:]), 0)
-        #     # mal_updates = torch.from_numpy(mal_updates)
-        #     agg_grads = torch.mean(mal_updates, 0)
-        #     deviation = torch.sign(agg_grads)
-        #     mal_update = adaptive_attack_krum(mal_updates, agg_grads, deviation, max(1, (args.k*args.malicious_proportion)**2//args.k))
-        #     mal_update = mal_update.numpy()
-        #     for mal_index in gv.mal_agent_index:
-        #         return_dict[str(mal_index)] = mal_update
+        if args.mal and args.attack_type == 'adaptive_attack_krum':
+            print('Executing adaptive attack for Krum...')
+            mal_updates = adaptive_attack_krum(t, return_dict)
+            for index in range(len(mal_agent_index)):
+                return_dict[str(mal_agent_index[index])] = mal_updates[index]
+            print('Krum attack finished.')
+
+        if args.mal and args.attack_type == 'adaptive_attack_mean':
+            print('Executing adaptive attack for Trimmed Mean...')
+            mal_updates = adaptive_attack_mean(t, return_dict)
+            for index in range(len(mal_agent_index)):
+                return_dict[str(mal_agent_index[index])] = mal_updates[index]
+            print('Trim attack finished.')
 
         # new added block-------------------------------------------------
         if args.gar == 'siren':
