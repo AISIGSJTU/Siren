@@ -16,9 +16,12 @@ from utils.dist_utils import collate_weights, model_shape_size, model_shape_size
 from utils.io_utils import file_write
 from collections import OrderedDict
 import tensorflow as tf
+# import torch
 import time
 import random
 import math
+# from adaptive_attack import *
+# import torch
 
 def flatten_weight(weight):
     # if args.dataset == "fMNIST":
@@ -42,7 +45,6 @@ def flatten_weight(weight):
 
 def cosine_similarity(weights1, weights2):
     return np.dot(weights1, weights2) / (np.linalg.norm(weights1 + 1e-9) * np.linalg.norm(weights2 + 1e-9))
-
 
 def server_detect(X_test, Y_test, return_dict, prohibit, t):
     global_weights = np.load(gv.dir_name + 'global_weights_t%s.npy' % t, allow_pickle=True)
@@ -261,6 +263,21 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
             mal_visible.append(t)
 
         print('Joined all processes for time step %s' % t)
+
+        # if args.attack_type == 'adaptive_attack_krum':
+        #     print('Executing adaptive attack for Krum')
+        #     mal_updates = []
+        #     mal_updates = np.array(mal_updates)
+        #     for mal_index in gv.mal_agent_index:
+        #         param_grad = torch.from_numpy(return_dict[str(mal_index)].astype('float32'))
+        #         mal_updates=param_grad[None, :] if len(mal_updates)==0 else torch.cat((mal_updates,param_grad[None,:]), 0)
+        #     # mal_updates = torch.from_numpy(mal_updates)
+        #     agg_grads = torch.mean(mal_updates, 0)
+        #     deviation = torch.sign(agg_grads)
+        #     mal_update = adaptive_attack_krum(mal_updates, agg_grads, deviation, max(1, (args.k*args.malicious_proportion)**2//args.k))
+        #     mal_update = mal_update.numpy()
+        #     for mal_index in gv.mal_agent_index:
+        #         return_dict[str(mal_index)] = mal_update
 
         # new added block-------------------------------------------------
         if args.gar == 'siren':

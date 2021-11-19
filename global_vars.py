@@ -135,7 +135,7 @@ def init():
     parser.add_argument('--gpu_ids', nargs='+', type=int, default=None,
                         help='GPUs to run on')
     parser.add_argument('--attack_type', type=str, default='none',
-                        help='attack type of malicious clients', choices=['sign_flipping', 'label_flipping', 'targeted_model_poisoning', 'stealthy_model_poisoning', 'none'])
+                        help='attack type of malicious clients', choices=['sign_flipping', 'label_flipping', 'targeted_model_poisoning', 'stealthy_model_poisoning', 'adaptive_attack_krum', 'none'])
     parser.add_argument('--malicious_proportion', type=float, default=0,
                         help='the proportion of malicious clients in the system, currently only useful when the attack type are sign-flipping and label-flipping. Please use a float number between 0 and 1 as input.')
     parser.add_argument('--non_iidness', type=float, default=0,
