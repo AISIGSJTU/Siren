@@ -92,8 +92,7 @@ def compute_lambda(all_updates, model_re, n_attackers):
 
     return (term_1 + max_wre_dist)
 
-# mal_update = get_malicious_updates_fang(user_grads[:n_attacker], agg_grads, deviation, n_attacker_)
-# def get_malicious_updates_fang(all_updates, model_re, deviation, n_attackers):
+# Adaptive attack based on Krum
 def adaptive_attack_krum(t, return_dict):
     shared_weights = np.load(gv.dir_name + 'global_weights_t%s.npy' % t, allow_pickle=True)
     args = gv.args
