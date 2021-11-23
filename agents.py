@@ -19,6 +19,8 @@ import time
 
 def alarm(i, X_test, Y_test, t, gpu_id, return_dict, shared_weights=None, previous_local_weights=None):
     args = gv.args
+    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
     print("alarm process_%s start" % i)
     shared_weights = np.load(gv.dir_name + 'global_weights_t%s.npy' % t, allow_pickle=True)
     previous_local_weights = np.load(gv.dir_name + 'ben_weights_%s_t%s.npy' % (i, t - 1), allow_pickle=True)

@@ -737,5 +737,7 @@ if __name__ == "__main__":
     os.environ["MKL_NUM_THREADS"] = '8'
     os.environ["NUMEXPR_NUM_THREADS"] = '8'
     os.environ["OMP_NUM_THREADS"] = '8'
+    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(map(str, gv.gpu_ids))
 
     main()
