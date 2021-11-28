@@ -156,6 +156,8 @@ def init():
                         help='Use multiple attacks in the system. This is an experimental function.')
     parser.add_argument("--trim_attack_b", type=int, default=1,
                         help='parameter b for adaptive attack to Trimmed Mean.')
+    parser.add_argument("--nrepeat", type=int, default=1,
+                        help='repeat the training for nrepeat times.')
 
     global args
     args = parser.parse_args()
@@ -196,7 +198,7 @@ def init():
         max_agents_per_gpu = 5
         if args.model_num > 8:
             max_agents_per_gpu = 1
-        mem_frac = 0.05
+        mem_frac = 0.1
     elif args.dataset == 'census':
         global DATA_DIM
         DATA_DIM = 104

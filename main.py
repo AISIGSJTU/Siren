@@ -739,5 +739,72 @@ if __name__ == "__main__":
     os.environ["OMP_NUM_THREADS"] = '8'
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(map(str, gv.gpu_ids))
+    for nrepeat in range(gv.args.nrepeat):
+        with open('output/global_accuracy.txt', 'a') as f:
+            f.write('Time ' + str(nrepeat+1)+'\n')
+        with open('output/global_acc.txt', 'a') as f:
+            f.write('Time ' + str(nrepeat+1)+'\n')
 
-    main()
+        if args.gar == 'siren':
+            with open('output/prohibit.txt', 'a') as f:
+                f.write('Time ' + str(nrepeat+1)+'\n')
+            with open('output/used_gradient.txt', 'a') as f:
+                f.write('Time ' + str(nrepeat+1)+'\n')
+
+            if args.mal:
+                for i in range(args.k):
+                    if i not in gv.mal_agent_index:
+                        with open('output/alarm_%s.txt' % i, 'a') as f:
+                            f.write('Time ' + str(nrepeat+1)+'\n')
+
+        for i in range(args.k):
+            with open('output/client_%s.txt' % i, 'a') as f:
+                f.write('Time ' + str(nrepeat+1)+'\n')
+
+        main()
+
+        with open('output/global_accuracy.txt', 'a') as f:
+            f.write('\n')
+        with open('output/global_acc.txt', 'a') as f:
+            f.write('\n')
+
+        if args.gar == 'siren':
+            with open('output/prohibit.txt', 'a') as f:
+                f.write('\n')
+            with open('output/used_gradient.txt', 'a') as f:
+                f.write('\n')
+
+            if args.mal:
+                for i in range(args.k):
+                    if i not in gv.mal_agent_index:
+                        with open('output/alarm_%s.txt' % i, 'a') as f:
+                            f.write('\n')
+
+        for i in range(args.k):
+            with open('output/client_%s.txt' % i, 'a') as f:
+                f.write('\n')
+    
+    if gv.args.nrepeat > 1:
+        with open('output/global_mean_acc.txt', 'w') as f:
+            f.write("Mean accuracy in " + str(gv.args.nrepeat) + " times\n\n")
+        accuracy = {}
+        for times in range(gv.args.nrepeat):
+            accuracy[times] = []
+        with open('output/global_acc.txt', 'r') as f:
+            f.readline()
+            for k in range(gv.args.nrepeat):
+                f.readline()
+                f.readline()
+                for number in range(gv.args.T):
+                    line = f.readline()
+                    accuracy[k].extend([float(i) for i in line.split()])
+
+        for j in range(gv.args.T):
+            tmp = []
+            for n in range(gv.args.nrepeat):
+                tmp.append(accuracy[n][j])
+            tmp = np.array(tmp)
+            mean = np.mean(tmp)
+            std = np.std(tmp)
+            with open('output/global_mean_acc.txt', 'a') as f:
+                f.write(str(mean) + ' +- ' + str(std) + '\n')
