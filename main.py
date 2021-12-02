@@ -217,16 +217,21 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
                             p = Process(target=agent, args=(i, X_train_shards[i],
                                                         Y_train_shards[i], t, gpu_id, return_dict, X_test, Y_test,lr))
                         else:
-                            if i % 3 == 0:
+                            if i % 4 == 0:
                                 p = Process(target=mal_agent_other, args=(i, X_train_shards[i],
                                                                       Y_train_shards[i], t, gpu_id, return_dict, X_test,
                                                                       Y_test,
                                                                       lr, "label_flipping"))
-                            elif i % 3 == 2:
+                            elif i % 4 == 1:
                                 p = Process(target=mal_agent_other, args=(i, X_train_shards[i],
                                                                       Y_train_shards[i], t, gpu_id, return_dict, X_test,
                                                                       Y_test,
                                                                       lr, "sign_flipping"))
+                            elif i % 4 == 2:
+                                p = Process(target=mal_agent_other, args=(i, X_train_shards[i],
+                                                                      Y_train_shards[i], t, gpu_id, return_dict, X_test,
+                                                                      Y_test,
+                                                                      lr, "adaptive_attack_krum"))
                             else:
                                 p = Process(target=mal_agent_mp, args=(i, X_train_shards[i],
                                                                    Y_train_shards[i], mal_data_X,
@@ -266,14 +271,26 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
             print('Executing adaptive attack for Krum...')
             mal_updates = adaptive_attack_krum(t, return_dict)
             for index in range(len(mal_agent_index)):
-                return_dict[str(mal_agent_index[index])] = mal_updates[index]
+                if args.multi_attack:
+                    if index % 4 == 2:
+                        return_dict[str(mal_agent_index[index])] = mal_updates[index]
+                    else:
+                        continue
+                else:
+                    return_dict[str(mal_agent_index[index])] = mal_updates[index]
             print('Krum attack finished.')
 
         if args.mal and args.attack_type == 'adaptive_attack_mean':
             print('Executing adaptive attack for Trimmed Mean...')
             mal_updates = adaptive_attack_mean(t, return_dict)
             for index in range(len(mal_agent_index)):
-                return_dict[str(mal_agent_index[index])] = mal_updates[index]
+                if args.multi_attack:
+                    if index % 4 == 2:
+                        return_dict[str(mal_agent_index[index])] = mal_updates[index]
+                    else:
+                        continue
+                else:
+                    return_dict[str(mal_agent_index[index])] = mal_updates[index]
             print('Trim attack finished.')
 
         # new added block-------------------------------------------------
