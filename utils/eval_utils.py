@@ -29,6 +29,7 @@ def eval_setup(global_weights):
     if 'MNIST' in args.dataset:
         global_model = model_mnist(type=args.model_num)
     elif args.dataset == 'CIFAR-10':
+        K.set_learning_phase(1)
         global_model = model_mnist(type=args.model_num)
     elif args.dataset == 'census':
         global_model = census_model_1()

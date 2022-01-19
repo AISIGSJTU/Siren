@@ -214,7 +214,9 @@ def init():
         NUM_CLASSES = 10
         BATCH_SIZE = 64
         max_acc = 99.0
-        max_agents_per_gpu = 10
+        max_agents_per_gpu = 5
+        if args.model_num > 8:
+            max_agents_per_gpu = 1
         mem_frac = 0.05
 
     if max_agents_per_gpu < 1:

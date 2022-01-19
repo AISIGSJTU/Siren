@@ -7,11 +7,13 @@ from keras.datasets import mnist
 from keras.callbacks import EarlyStopping
 from keras.models import Sequential, model_from_json, Model
 from keras.layers import Dense, Dropout, Activation, Flatten, Input
-from keras.layers import Conv2D, MaxPooling2D, BatchNormalization, MaxPool2D, GlobalAveragePooling2D, Layer, Add
+from keras.layers import Conv2D, MaxPooling2D, BatchNormalization, MaxPool2D, GlobalAveragePooling2D, Layer, Add, Convolution2D
 from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import np_utils
+from keras.applications import MobileNet
 import global_vars as gv
 import utils.ResNet as ResNet
+# import utils.ResNetV2 as ResNet
 from utils.fmnist import load_fmnist
 import numpy as np
 # np.random.seed(777)
@@ -249,7 +251,40 @@ def model_resnet18():
     # model.build(input_shape=(None, gv.IMAGE_COLS, gv.IMAGE_ROWS, gv.NUM_CHANNELS))
     model = ResNet.ResnetBuilder()
     model = model.build_resnet18()
+    # model = ResNet.ResNet18((gv.IMAGE_COLS, gv.IMAGE_ROWS, gv.NUM_CHANNELS), gv.NUM_CLASSES)
     return model
+
+def mobileNet():
+    model = MobileNet(include_top=True,
+                    weights=None,
+                    input_tensor=None,
+                    input_shape=(gv.IMAGE_ROWS, gv.IMAGE_COLS, gv.NUM_CHANNELS),
+                    pooling='max',
+                    classes=gv.NUM_CLASSES)
+    return model
+
+def AlexNet():
+        model = Sequential()
+        # input_shape = (64,64, self.config.channles)
+        input_shape = (gv.IMAGE_ROWS, gv.IMAGE_COLS, gv.NUM_CHANNELS)
+        model.add(Conv2D(96, (11, 11), input_shape=input_shape, strides=(4, 4), padding='same',activation='relu'))
+        model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))#26*26
+        model.add(Conv2D(256, (5, 5), strides=(1, 1), padding='same', activation='relu'))
+        model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+        model.add(Conv2D(384, (3, 3), strides=(1, 1), padding='same', activation='relu'))
+        model.add(Conv2D(384, (3, 3), strides=(1, 1), padding='same', activation='relu'))
+        model.add(Conv2D(256, (3, 3), strides=(1, 1), padding='same', activation='relu'))
+        model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+        model.add(Flatten())
+        # model.add(Dense(4096, activation='relu'))
+        model.add(Dense(1024, activation='relu'))
+        model.add(Dropout(0.5))
+        # model.add(Dense(4096, activation='relu'))
+        model.add(Dense(1024, activation='relu'))
+        model.add(Dropout(0.5))
+        model.add(Dense(gv.NUM_CLASSES, activation='softmax'))
+        # model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
+        return model
 
 
 def model_mnist(type):
@@ -257,7 +292,7 @@ def model_mnist(type):
     Defines MNIST model using Keras sequential model
     """
 
-    models = [model_cifar, modelA, modelB, modelC, modelD, modelE, modelF, modelG, model_LR, model_resnet18]
+    models = [model_cifar, modelA, modelB, modelC, modelD, modelE, modelF, modelG, model_LR, model_resnet18, mobileNet, AlexNet]
 
     return models[type]()
 

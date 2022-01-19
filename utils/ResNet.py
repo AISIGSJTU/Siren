@@ -43,13 +43,13 @@ class ResnetBuilder(object):
             The keras `Model`.
         """
 
-        input_shape = (gv.IMAGE_COLS, gv.IMAGE_ROWS, gv.NUM_CHANNELS)
+        input_shape = (gv.IMAGE_ROWS, gv.IMAGE_COLS, gv.NUM_CHANNELS)
         num_outputs = gv.NUM_CLASSES
         self._handle_dim_ordering()
         block_fn = self._get_block(block_fn)
 
         input = Input(shape=input_shape)
-        conv1 = self._conv_bn_relu(filters=64, kernel_size=(7, 7), strides=(2, 2))(input)
+        conv1 = self._conv_bn_relu(filters=64, kernel_size=(3, 3), strides=(1, 1))(input)
         pool1 = MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding="same")(conv1)
 
         block = pool1
