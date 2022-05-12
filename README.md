@@ -1,6 +1,6 @@
 # SIREN: A Proactive Attack-agnostic Defense System for Federated Learning
 
-This code accompanies the paper 'SIREN: A Proactive Attack-agnostic Defense System for Federated Learning'. 
+This code accompanies the paper 'SIREN: A Proactive Attack-agnostic Defense System for Federated Learning', which is accepted by ACM SoCC 2021.
 
 Please download Fashion-MNIST dataset to path like ```/home/data/``` on the user's machine if you want to use it. CIFAR-10 dataset can be downloaded by the program automatically.
 
@@ -62,3 +62,13 @@ python main.py --dataset=fMNIST --k=10 --C=1.0 --E=5 --T=40 --B=64 --train --mod
 ```
 
 After running the code, please check ```/output``` directory for the results (please manually create the ```output``` directory before the execution of the codes).
+
+To cite our paper, please use the following BibTex:
+```
+@inproceedings{guo2021siren,
+  title={Siren: Byzantine-robust Federated Learning via Proactive Alarming},
+  author={Guo, Hanxi and Wang, Hao and Song, Tao and Hua, Yang and Lv, Zhangcheng and Jin, Xiulang and Xue, Zhengui and Ma, Ruhui and Guan, Haibing},
+  booktitle={Proceedings of the ACM Symposium on Cloud Computing (SoCC)},
+  year={2021}
+}
+```
