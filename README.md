@@ -1,6 +1,6 @@
-# SIREN: A Proactive Attack-agnostic Defense System for Federated Learning
+# SIREN: Byzantine-robust Federated Learning via Proactive Alarming
 
-This code accompanies the paper 'SIREN: A Proactive Attack-agnostic Defense System for Federated Learning', which is accepted by ACM SoCC 2021.
+This code accompanies the paper 'SIREN: Byzantine-robust Federated Learning via Proactive Alarming', which is accepted by ACM SoCC 2021.
 
 Please download Fashion-MNIST dataset to path like ```/home/data/``` on the user's machine if you want to use it. CIFAR-10 dataset can be downloaded by the program automatically.
 
