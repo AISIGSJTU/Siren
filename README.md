@@ -1,16 +1,18 @@
-# Siren: A Proactive Attack-agnostic Defense System for Federated Learning
+# SIREN: A Proactive Attack-agnostic Defense System for Federated Learning
 
-This code accompanies the paper 'Siren: A Proactive Attack-agnostic Defense System for Federated Learning'. Please download Fashion-MNIST dataset to /home/data/ on the user's machine if you want to use it.
+This code accompanies the paper 'SIREN: A Proactive Attack-agnostic Defense System for Federated Learning'. 
 
-Recommended Dependencies: Please check the requirements.txt file in /requirement/. We have tested our system using this setting.
+Please download Fashion-MNIST dataset to path like ```/home/data/``` on the user's machine if you want to use it. CIFAR-10 dataset can be downloaded by the program automatically.
 
-To run the code, please use:
+Recommended Dependencies: Please check the ```requirements.txt``` file in ```/requirement```. We have tested our system using such setting.
+
+To run the code without any customized settings, please use:
 
 ```english
 python main.py
 ```
 
-While if you want to run the code successfully, you also need to set the following hyper-parameters:
+While if you want to run the code successfully with your customized parameters, you also need to set the following basic hyper-parameters:
 
 | Parameter   | Function                                               |
 | ----------- | ------------------------------------------------------ |
@@ -32,9 +34,17 @@ While if you want to run the code successfully, you also need to set the followi
 | --malicious_proportion| the proportion of malicious clients in the system|
 | --non_iidness| the non-iidness of the data distribution on the clients |
 
-* The options of '--attack_type' are: 'sign_flipping', 'label_flipping', 'targeted_model_poisoning', 'stealthy_model_poisoning' and 'none'. We only support four kinds of attacks now.
-* The input of '--malicious_proportion' should be a float number between 0 and 1. And this parameter only works when the attack type is not model poisoning.
-* The input of '--non_iidness' should also be a float number between 0 and 1. And please use this parameter only when the number of clients in the system is an integral multiple of 10.
+and SIREN exclusive parameters (if you want to use SIREN):
+
+| Parameter         | Function                                               |
+| -----------       | ------------------------------------------------------ |
+| --server_c        | threshold $C_s$ used by the server                     |
+| --client_c        | threshold $C_s$ used by the client                     |
+| --server_prohibit | threshold to trigger the penalty mechanism.            |
+| --forgive         | the award value used by the award mechanism            |
+| --root_size       | the size of the root test dataset                      |
+
+For more parameters and details of the above parameters, please refer to ```\global_vars.py```
 
 If you want to use the same settings as us, here are some examples:
 
@@ -45,10 +55,10 @@ python main.py --dataset=fMNIST --k=10 --C=1.0 --E=5 --T=40 --B=64 --train --mod
 ```
 While if you want to use CIFAR-10 dataset, please set --dataset=CIFAR-10 and --model_num=0.
 
-To run Siren under single-target targeted model poisoning attack with Fashion-MNIST dataset, use
+To run SIREN under single-target targeted model poisoning attack with Fashion-MNIST dataset, use
 
 ```
 python main.py --dataset=fMNIST --k=10 --C=1.0 --E=5 --T=40 --B=64 --train --model_num=1 --mal --mal_obj=single --gar=siren --attack_type=targeted_model_poisoning
 ```
 
-After running the code, please check 'output' directory for the results.
+After running the code, please check ```/output``` directory for the results (please manually create the ```output``` directory before the execution of the codes).
