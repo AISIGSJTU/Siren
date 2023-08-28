@@ -21,6 +21,7 @@ import random
 import math
 from adaptive_attack import *
 
+
 def flatten_weight(weight):
     # if args.dataset == "fMNIST":
     #     flatten_weights = []
@@ -348,15 +349,15 @@ def train_fn(X_train_shards, Y_train_shards, X_test, Y_test, return_dict,
                 flag = 0
             print("exist_mal:", exist_mal)
             if flag and exist_mal[0]:
-                if t-1>=0 and exist_mal[0]:
-                    print("Use t-1 global weight -----------------------")
-                    global_weights = np.load(gv.dir_name + 'global_weights_t%s.npy' % (t-1), allow_pickle=True)
-                    exist_mal[1] = exist_mal[0]
-                    exist_mal[0] = 0
                 if t-2>=0 and exist_mal[0] and exist_mal[1]:
                     print("Use t-2 global weight -------------------------")
                     global_weights = np.load(gv.dir_name + 'global_weights_t%s.npy' % (t-2), allow_pickle=True)
                     exist_mal = [0, 0]
+                elif t-1>=0 and exist_mal[0]:
+                    print("Use t-1 global weight -----------------------")
+                    global_weights = np.load(gv.dir_name + 'global_weights_t%s.npy' % (t-1), allow_pickle=True)
+                    exist_mal[1] = exist_mal[0]
+                    exist_mal[0] = 0
                 else:
                   global_weights = np.load(gv.dir_name + 'global_weights_t%s.npy' % t, allow_pickle=True)
             else:
