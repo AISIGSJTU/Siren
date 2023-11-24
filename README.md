@@ -1,6 +1,8 @@
-# SIREN: Byzantine-robust Federated Learning via Proactive Alarming
+# Siren: Byzantine-robust Federated Learning via Proactive Alarming
 
 This code accompanies the paper 'SIREN: Byzantine-robust Federated Learning via Proactive Alarming', which is accepted by ACM SoCC 2021.
+
+:star2:This is the Tensorflow version of Siren. For Pytorch version, please refer to https://github.com/ln-y/Siren_by_Pytorch. Thanks @ln-y.
 
 Please download Fashion-MNIST dataset to path like ```/home/data/``` on the user's machine if you want to use it. CIFAR-10 dataset can be downloaded by the program automatically.
 
