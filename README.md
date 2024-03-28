@@ -70,7 +70,7 @@ To cite our paper, please use the following BibTex:
 @inproceedings{guo2021siren,
   title={Siren: Byzantine-robust Federated Learning via Proactive Alarming},
   author={Guo, Hanxi and Wang, Hao and Song, Tao and Hua, Yang and Lv, Zhangcheng and Jin, Xiulang and Xue, Zhengui and Ma, Ruhui and Guan, Haibing},
-  booktitle={Proceedings of the ACM Symposium on Cloud Computing (SoCC)},
+  booktitle={ACM Symposium on Cloud Computing (SoCC)},
   year={2021}
 }
 ```
